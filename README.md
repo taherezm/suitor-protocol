@@ -1,8 +1,10 @@
 # Suitor Protocol
 
+**[Live demo](https://taherezm.github.io/suitor-protocol/)**
+
 A hackathon prototype for a proposed litigation funding protocol on Solana. Built with Next.js App Router, TypeScript, and Tailwind CSS. All case and pool data are fictional. The site does not accept real investments or connect to a wallet.
 
-The GitHub Pages deployment is being prepared for `https://taherezm.github.io/suitor-protocol/`. Publication has not yet been verified.
+The published website is the public reference for the hackathon project. It runs entirely as static files on GitHub Pages, with no application backend.
 
 ## Local setup
 
