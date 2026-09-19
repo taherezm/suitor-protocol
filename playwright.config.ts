@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { siteBaseURL } from "./tests/e2e/site-url";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -8,7 +9,7 @@ export default defineConfig({
   workers: 2,
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: siteBaseURL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -25,10 +26,12 @@ export default defineConfig({
       use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
     },
   ],
-  webServer: {
-    command: "pnpm start --hostname 127.0.0.1",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 60000,
-  },
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: "pnpm preview",
+        url: siteBaseURL,
+        reuseExistingServer: false,
+        timeout: 60000,
+      },
 });

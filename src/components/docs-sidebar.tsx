@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { docsNavigation } from "@/lib/docs-navigation";
 
 export function DocsSidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname().replace(/\/+$/, "") || "/";
   const [open, setOpen] = useState(false);
   useEffect(() => {
     setOpen(false);

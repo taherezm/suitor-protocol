@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { DocsArticle } from "@/components/docs-article";
 import { docsNavigation, type DocSlug } from "@/lib/docs-navigation";
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return docsNavigation
     .filter((item) => item.slug !== "overview")

@@ -55,7 +55,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <span className="header-status">In development</span>
+        <span className="header-status">Hackathon prototype</span>
       </div>
     </header>
   );

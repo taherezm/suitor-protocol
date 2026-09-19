@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s | Suitor Protocol",
   },
   description:
-    "Explore the proposed Suitor litigation funding protocol, its underwriting methodology, and a sample investment pool. Interface preview only.",
+    "Explore the proposed Suitor litigation funding protocol, its underwriting methodology, and a sample investment pool. Hackathon prototype only.",
 };
 
 export default function RootLayout({
@@ -31,7 +31,7 @@ export default function RootLayout({
               © {new Date().getFullYear()} Suitor Protocol. All rights reserved.
             </p>
             <div>
-              <span>Protocol in development</span>
+              <span>Hackathon prototype · Sample data</span>
               <Link href="/docs/risks">
                 Risks & disclosures
                 <svg

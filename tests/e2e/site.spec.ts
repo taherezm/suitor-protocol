@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { siteBaseURL, siteURL } from "./site-url";
 
 const routes = [
   "/",
@@ -19,8 +20,15 @@ for (const route of routes) {
   }, testInfo) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    const response = await page.goto(route);
+    const response = await page.goto(siteURL(route));
     expect(response?.status()).toBe(200);
+    const heading = await page.locator("h1").innerText();
+    const refreshed = await page.reload();
+    expect(refreshed?.status()).toBe(200);
+    await expect(page).toHaveURL(siteURL(route));
+    await expect(page.locator("h1")).toHaveText(heading, {
+      useInnerText: true,
+    });
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("h1")).toBeVisible();
     await expect(page.getByRole("contentinfo")).toContainText(
@@ -40,9 +48,26 @@ for (const route of routes) {
     for (const href of links) {
       if (href.startsWith("#")) await expect(page.locator(href)).toHaveCount(1);
       else if (href.startsWith("/")) {
+        expect(href.startsWith(new URL(siteBaseURL).pathname), href).toBe(true);
         const result = await request.get(href.split("#")[0]);
         expect(result.status(), href).toBe(200);
       }
+    }
+    const assets = await page
+      .locator('script[src], link[rel="stylesheet"], link[rel="icon"]')
+      .evaluateAll((nodes) =>
+        nodes
+          .map((node) => node.getAttribute("src") ?? node.getAttribute("href")!)
+          .filter(Boolean),
+      );
+    expect(assets.length).toBeGreaterThan(0);
+    for (const asset of assets) {
+      const url = new URL(asset, page.url());
+      expect(
+        url.pathname.startsWith(new URL(siteBaseURL).pathname),
+        asset,
+      ).toBe(true);
+      expect((await request.get(url.href)).status(), asset).toBe(200);
     }
     await page.screenshot({
       path: testInfo.outputPath("page.png"),
@@ -55,12 +80,12 @@ for (const route of routes) {
 test("primary navigation, wordmark, and whitepaper action work", async ({
   page,
 }, testInfo) => {
-  await page.goto("/");
+  await page.goto(siteURL("/"));
   await expect(
     page.getByRole("heading", { name: "Litigation funding on Solana." }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Read the whitepaper" }).click();
-  await expect(page).toHaveURL(/\/docs\/whitepaper$/);
+  await expect(page).toHaveURL(siteURL("/docs/whitepaper"));
   await expect(page.getByText("Draft", { exact: true })).toBeVisible();
   if (testInfo.project.name === "mobile")
     await page.getByRole("button", { name: "Menu" }).click();
@@ -68,7 +93,7 @@ test("primary navigation, wordmark, and whitepaper action work", async ({
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Underwriting" })
     .click();
-  await expect(page).toHaveURL(/\/underwriting$/);
+  await expect(page).toHaveURL(siteURL("/underwriting"));
   await page.getByRole("link", { name: "02 Outcome engine" }).click();
   await expect(page).toHaveURL(/#outcomes$/);
   await expect(
@@ -77,13 +102,13 @@ test("primary navigation, wordmark, and whitepaper action work", async ({
   await page
     .getByRole("link", { name: "Suitor Protocol", exact: true })
     .click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL(siteURL("/"));
 });
 
 test("documentation navigation is usable on mobile and desktop", async ({
   page,
 }, testInfo) => {
-  await page.goto("/docs");
+  await page.goto(siteURL("/docs"));
   if (testInfo.project.name === "mobile") {
     await expect(
       page.getByRole("navigation", { name: "Documentation", exact: true }),
@@ -99,6 +124,9 @@ test("documentation navigation is usable on mobile and desktop", async ({
   await expect(
     page.getByRole("heading", { name: "Understanding pool shares." }),
   ).toBeVisible();
+  await expect(
+    page.locator('#docs-navigation a[aria-current="page"]'),
+  ).toHaveAttribute("href", new URL(siteURL("/docs/pool-shares")).pathname);
   if (testInfo.project.name === "mobile")
     await expect(
       page.getByRole("button", { name: "Documentation", exact: true }),
@@ -108,7 +136,7 @@ test("documentation navigation is usable on mobile and desktop", async ({
 test("deposit validates, reviews, edits, and completes without making a transaction", async ({
   page,
 }, testInfo) => {
-  await page.goto("/pool");
+  await page.goto(siteURL("/pool"));
   const submissions: string[] = [];
   page.on("request", (request) => {
     if (request.method() === "POST") submissions.push(request.url());
@@ -162,7 +190,10 @@ test("deposit validates, reviews, edits, and completes without making a transact
   await expect(dialog).not.toBeVisible();
   await expect(depositButton).toBeFocused();
   await expect(
-    page.locator(".metrics > div").filter({ hasText: "Total deposits" }).getByRole("definition"),
+    page
+      .locator(".metrics > div")
+      .filter({ hasText: "Total deposits" })
+      .getByRole("definition"),
   ).toContainText("$1,000,000");
   await depositButton.click();
   await expect(input).toHaveValue("");
@@ -174,7 +205,7 @@ test("deposit validates, reviews, edits, and completes without making a transact
 test("dialog keeps keyboard focus inside and supports cancellation", async ({
   page,
 }) => {
-  await page.goto("/pool");
+  await page.goto(siteURL("/pool"));
   await page.getByRole("button", { name: "Preview deposit" }).click();
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press("Tab");
@@ -201,7 +232,7 @@ test("narrow screens and enlarged text do not overflow the reading layout", asyn
 }) => {
   await page.setViewportSize({ width: 320, height: 740 });
   for (const route of ["/", "/pool", "/underwriting", "/docs/whitepaper"]) {
-    await page.goto(route);
+    await page.goto(siteURL(route));
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -210,7 +241,7 @@ test("narrow screens and enlarged text do not overflow the reading layout", asyn
     ).toBe(true);
   }
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/docs/whitepaper");
+  await page.goto(siteURL("/docs/whitepaper"));
   await page.addStyleTag({ content: "html { font-size: 200%; }" });
   expect(
     await page.evaluate(
@@ -220,7 +251,7 @@ test("narrow screens and enlarged text do not overflow the reading layout", asyn
 });
 
 test("unknown pages have a useful 404", async ({ page }) => {
-  const response = await page.goto("/docs/does-not-exist");
+  const response = await page.goto(siteURL("/docs/does-not-exist"));
   expect(response?.status()).toBe(404);
   await expect(
     page.getByRole("heading", { name: "This page isn’t here." }),
