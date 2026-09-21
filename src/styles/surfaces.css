@@ -1,0 +1,258 @@
+/* Shared surface, ornament and composition utilities. Owner: foundation.
+   Every build agent composes from these instead of inventing new surfaces.
+
+   The rule of the system: light is the material. A raised surface is dark glass
+   with a 1px stroke, a 137deg gradient fill and a 1px inset lip along its top
+   edge, so it reads as a solid object catching a light from the upper left. */
+
+/* ---------- Surfaces ---------- */
+
+.glass {
+  position: relative;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+  backdrop-filter: blur(12px);
+}
+
+/* Glass inside glass does not blur again. A backdrop-filter is a full
+   compositing pass over everything behind the element, and the page stacks
+   panels inside frames inside slabs: nesting them was costing nineteen of
+   those passes for an effect the reader cannot see, because the surface
+   underneath has already been blurred by its parent. The fill and the stroke
+   still do all the work, so nothing looks different. */
+.glass .glass,
+.glass-frame .glass,
+.slab .glass {
+  backdrop-filter: none;
+}
+
+/* A framed stage: the same glass, opened up and sat in its own pool of light. */
+.glass-frame {
+  position: relative;
+  border-radius: var(--r-frame);
+  background: var(--surface);
+  box-shadow:
+    0 0 0 1px var(--stroke),
+    var(--highlight),
+    0 40px 120px -20px var(--glow);
+}
+
+/* Aave-style architecture: a giant rounded slab inset from the viewport edges. */
+.slab {
+  position: relative;
+  overflow: hidden;
+  margin-inline: 16px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-slab);
+  background: var(--bg-raise);
+}
+
+/* ---------- Composition ---------- */
+
+/* A navigable group of sections on the one-page home. It sets scroll-margin-top
+   and nothing else: no overflow, no transform, no filter, no contain, because
+   the timeline inside one of these is position: sticky and every one of those
+   would strand it.
+
+   The bar is already cleared by `scroll-padding-top` on `<html>`, which every
+   in-page target on the site gets. Repeating the whole offset here would double
+   it and land each section 100px further down than the ones the section index
+   points at, so this adds a little air and nothing more. */
+.anchor-group {
+  scroll-margin-top: 8px;
+}
+
+.section {
+  position: relative;
+  padding-block: clamp(48px, 7vw, 108px);
+}
+
+/* One shape for every section heading on the site: a ruled eyebrow, the lead
+   as the h2, and the continuation as a 20px two-tone line under it. The heading
+   is measured in pixels rather than `ch`, because `ch` resolves against the
+   header's own 16px and would cap a 56px heading at roughly 350px. */
+.section-head {
+  max-width: 760px;
+  margin-inline: auto;
+  text-align: center;
+}
+.section-head .eyebrow-rule {
+  margin-bottom: 20px;
+}
+.section-head .section-sub {
+  max-width: 56ch;
+  margin: 20px auto 0;
+}
+
+.eyebrow-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.eyebrow-rule::before,
+.eyebrow-rule::after {
+  content: "";
+  flex: 1 1 0;
+  max-width: 140px;
+  height: 1px;
+}
+.eyebrow-rule::before {
+  background: linear-gradient(90deg, transparent, var(--stroke-strong));
+}
+.eyebrow-rule::after {
+  background: linear-gradient(90deg, var(--stroke-strong), transparent);
+}
+
+/* Two-tone body copy: white lead, muted continuation, one paragraph. */
+.two-tone {
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  /* Centred copy leaves a one word last line often enough to be a tell. */
+  text-wrap: pretty;
+}
+.two-tone > span {
+  color: var(--text-3);
+}
+@media (max-width: 600px) {
+  .two-tone {
+    font-size: 17px;
+  }
+}
+
+/* ---------- Chips ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 13px 6px 11px;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-chip);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+  transition:
+    background-image var(--fast) var(--ease),
+    border-color var(--fast) var(--ease),
+    color var(--fast) var(--ease);
+}
+/* The chip answers the pointer whether or not it is a link, and answers a
+   keyboard the same way, so a focused control inside one is never silent. */
+.chip:hover,
+.chip:focus-within {
+  border-color: var(--stroke-bright);
+  background-image: var(--surface-hover);
+  color: var(--text);
+}
+
+/* A register mark, not an indicator light: no pulse, no halo. The page has one
+   light source and nothing on it emits its own. */
+.chip-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* A chip that goes somewhere. The arrow is the only thing that moves. */
+.chip-link {
+  cursor: pointer;
+  padding-right: 11px;
+}
+.chip-link svg {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--medium) var(--ease-out);
+}
+.chip-link:hover svg {
+  transform: translateX(3px);
+}
+.chip-link:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+  border-radius: var(--r-chip);
+}
+/* A chip is a 33px target at its natural leading, which is under the floor for
+   a thumb. The pill keeps its drawn size; only the box it answers in grows. */
+@media (max-width: 600px) {
+  .chip-link {
+    min-height: 44px;
+    padding-block: 10px;
+  }
+}
+
+/* There is no pointer-tracked highlight anywhere on this site. A glow that
+   follows the cursor was tried and cut: a card answers a pointer by lifting
+   2px and brightening its stroke (`.ix-card` in motion.css), and nothing on
+   the page tracks the mouse. */
+
+/* ---------- Light ----------
+   A volumetric cone, built from two blurred gradients and tapered with a mask.
+   Purely decorative: it never carries meaning and never takes pointer events. */
+
+.light-cone {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  width: min(1100px, 120%);
+  aspect-ratio: 1 / 1;
+  left: 50%;
+  top: -30%;
+  translate: -50% 0;
+  background:
+    radial-gradient(
+      50% 40% at 50% 0%,
+      rgba(205, 218, 255, 0.16),
+      transparent 70%
+    ),
+    conic-gradient(
+      from 160deg at 50% 0%,
+      transparent 0deg,
+      rgba(205, 218, 255, 0.09) 24deg,
+      rgba(205, 218, 255, 0.02) 40deg,
+      transparent 56deg
+    );
+  filter: blur(26px);
+  mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    rgba(0, 0, 0, 0.35) 55%,
+    transparent 88%
+  );
+}
+
+/* There are no registration marks and no hairline grid anywhere on this site.
+   `.reg-marks` drew four x-shaped corner marks on a box and `.grid-fade` laid a
+   masked hairline field behind a section; both are gone, markup and all, on the
+   owner's direction. A box is dark glass, a stroke and a lit top edge, and the
+   only thing behind it is light. Do not reintroduce either: if a stage needs
+   depth, give it a `.light-cone`, not a drafting sheet. */
+
+/* ---------- Engraving ----------
+   Guilloche is the line-work on banknotes and share certificates. It is drawn
+   in currentColor, so the opacity lives here and nowhere else. */
+
+/* Engraving is meant to be seen. The owner's direction is fine line-work at
+   0.16 to 0.22 white, never a faint wisp, so there is no faint variant to
+   reach for. */
+.guilloche {
+  display: block;
+  color: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+.guilloche-bright {
+  color: rgba(255, 255, 255, 0.22);
+}

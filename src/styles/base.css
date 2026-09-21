@@ -1,0 +1,389 @@
+/* Reset, document rhythm, typography and the shared controls.
+   Owner: foundation. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  scrollbar-gutter: stable;
+  /* Anchor targets must clear the floating bar, not slide under it. */
+  scroll-padding-top: calc(var(--nav-offset) + 16px);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-2);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+/* The home hero owns its own top space; every other page starts below the bar. */
+main {
+  padding-top: var(--nav-offset);
+  outline: none;
+}
+main:has(.hero) {
+  padding-top: 0;
+}
+.main-content {
+  min-height: 60vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+  margin: 0;
+}
+h1,
+h2,
+h3,
+h4 {
+  color: var(--text);
+  font-weight: 600;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+h1 {
+  font-size: clamp(44px, 6.2vw, 80px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+h2 {
+  font-size: clamp(32px, 4vw, 56px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+h3 {
+  font-size: 17px;
+  line-height: 1.45;
+  letter-spacing: -0.014em;
+}
+p {
+  overflow-wrap: break-word;
+}
+strong {
+  color: var(--text);
+  font-weight: 500;
+}
+svg {
+  flex: 0 0 auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--fast) var(--ease),
+    background-image var(--fast) var(--ease),
+    color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease),
+    box-shadow var(--fast) var(--ease),
+    opacity var(--fast) var(--ease);
+}
+a,
+button,
+input,
+summary,
+[tabindex="0"] {
+  touch-action: manipulation;
+}
+
+/* One focus ring for the whole site, and it is always visible. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+summary:focus-visible,
+[tabindex="0"]:focus-visible,
+[tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+  border-radius: var(--r-control);
+}
+
+::selection {
+  color: var(--bg);
+  background: var(--text);
+}
+
+/* ---------- Layout ---------- */
+
+.shell {
+  width: min(100% - 48px, var(--content));
+  margin-inline: auto;
+}
+@media (max-width: 800px) {
+  .shell {
+    width: calc(100% - 32px);
+  }
+}
+@media (max-width: 600px) {
+  .shell {
+    width: calc(100% - 20px);
+  }
+}
+
+/* ---------- Text helpers ---------- */
+
+.mono {
+  font-family: var(--font-num);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  color: var(--text-3);
+}
+.small {
+  font-size: 14px;
+}
+.numeric,
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+.platinum-text {
+  background: var(--platinum);
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Controls ---------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--r-control);
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color var(--fast) var(--ease),
+    color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease),
+    box-shadow var(--fast) var(--ease),
+    transform var(--fast) var(--ease);
+}
+.button:active {
+  transform: translateY(1px);
+}
+.button svg {
+  transition: transform var(--medium) var(--ease-out);
+}
+.button:hover svg {
+  transform: translateX(3px);
+}
+.button-primary {
+  color: #2f3031;
+  background: #e6e6e6;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: var(--highlight);
+}
+.button-primary:hover {
+  background: #ffffff;
+}
+/* Glass, not a dark rectangle: the fill is a sheet of white light at low
+   opacity and the blur sits on the same element, so the button picks up
+   whatever it is standing on.
+
+   The blur is written once, standard property only. lightningcss adds the
+   prefixed form for the browsers that need it, and drops the standard one
+   whenever a hand-written -webkit- duplicate sits beside it, which is how this
+   button lost its glass in the build output. */
+.button-secondary {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--highlight);
+  backdrop-filter: blur(12px) saturate(140%);
+}
+.button-secondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.button-full {
+  width: 100%;
+  margin-top: 24px;
+}
+
+/* The resting rule is a hairline; a white rule draws in over it from the left
+   on hover or focus, so every text link on the site animates without needing a
+   class on it. */
+.text-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding-block: 5px;
+  border-bottom: 1px solid var(--stroke-strong);
+  transition:
+    border-color var(--fast) var(--ease),
+    color var(--fast) var(--ease);
+}
+.text-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--text);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--medium) var(--ease-out);
+}
+.text-link svg {
+  transition: transform var(--medium) var(--ease-out);
+}
+.text-link:hover {
+  border-color: var(--stroke-bright);
+}
+.text-link:hover::after,
+.text-link:focus-visible::after {
+  transform: scaleX(1);
+}
+.text-link:hover svg {
+  transform: translateX(4px);
+}
+/* At its natural leading a text link is a 33px target, which is under the
+   floor for a thumb. The rule it draws stays where it is; the box around it
+   grows. */
+@media (max-width: 600px) {
+  .text-link {
+    min-height: 44px;
+    padding-block: 10px;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--stroke-strong);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+  color: var(--text-2);
+  padding: 5px 11px;
+  border-radius: var(--r-chip);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.badge-dark {
+  color: #2f3031;
+  background: #e6e6e6;
+  background-image: none;
+  border-color: rgba(255, 255, 255, 0.2);
+  font-weight: 500;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 60;
+  top: 12px;
+  left: 12px;
+  padding: 12px 20px;
+  color: #2f3031;
+  background: #e6e6e6;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--r-control);
+  transform: translateY(-200%);
+  transition: transform var(--medium) var(--ease-out);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* ---------- Motion ----------
+   One orchestrated entrance per page load, then motion only answers actions. */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* The one orchestrated entrance, used by the hero. Everything that enters on
+   scroll instead goes through `[data-reveal]` in motion.css, and the route
+   change animation lives there too. */
+.reveal {
+  animation: rise var(--slow) var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+
+::view-transition-old(root) {
+  animation: fade-in 180ms var(--ease) reverse both;
+}
+::view-transition-new(root) {
+  animation: fade-in 260ms var(--ease) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  /* Nothing may depend on an animation to become visible or unpinned. */
+  .reveal,
+  .page-enter,
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}

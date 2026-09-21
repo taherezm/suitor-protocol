@@ -1,0 +1,74 @@
+/* Design tokens. Owner: foundation. Every other stylesheet reads from here and
+   defines no raw colours of its own.
+
+   The palette is strictly monochrome. The only chroma in the system is the faint
+   cool tint inside the glows, which is what makes white light read as light
+   rather than as grey paint. Loss is drawn hollow, gain is drawn filled: outcome
+   is carried by fill and luminance, never by hue. */
+
+:root {
+  color-scheme: dark;
+
+  /* Ground */
+  --bg: #050506;
+  --bg-raise: #0b0c0e;
+  --bg-sunken: #030304;
+
+  /* Raised surfaces are dark glass catching a light from the upper left. */
+  --surface: linear-gradient(
+    137deg,
+    rgba(17, 18, 20, 0.75) 4.87%,
+    rgba(12, 13, 15, 0.9) 75.88%
+  );
+  --surface-hover: linear-gradient(
+    137deg,
+    rgba(24, 25, 28, 0.8) 4.87%,
+    rgba(15, 16, 19, 0.92) 75.88%
+  );
+
+  --stroke: rgba(255, 255, 255, 0.06);
+  --stroke-strong: rgba(255, 255, 255, 0.12);
+  --stroke-bright: rgba(255, 255, 255, 0.22);
+
+  /* The 1px lip along the top edge of every raised surface. */
+  --highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+
+  /* Four steps down from white. The muted half of a two-tone line is real
+     copy, not filler, so every step here clears 4.5:1 against --bg and against
+     the raised surfaces: the separation from white is what carries the
+     emphasis, and it still reads at this range. */
+  --text: #ffffff;
+  --text-2: #9c9c9d;
+  --text-3: #8a8b8c;
+  --text-4: rgba(255, 255, 255, 0.56);
+
+  /* Brushed metal for key numerals, via background-clip: text. */
+  --platinum: linear-gradient(180deg, #ffffff 0%, #cfd4dd 55%, #8d94a1 100%);
+
+  --glow: rgba(205, 218, 255, 0.1);
+  --glow-strong: rgba(205, 218, 255, 0.18);
+
+  /* Radius tells you what a thing is: controls are small, slabs are architecture. */
+  --r-control: 8px;
+  --r-chip: 999px;
+  --r-input: 12px;
+  --r-card: 16px;
+  --r-frame: 24px;
+  --r-slab: 32px;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --fast: 140ms;
+  --medium: 260ms;
+  --slow: 600ms;
+
+  --content: 1204px;
+  --nav-h: 72px;
+  --nav-offset: calc(var(--nav-h) + 16px);
+
+  /* Font stacks. Inter carries everything; the mono is reserved for numerals,
+     the ticker, terminal chrome and axis labels. */
+  --font-ui: var(--font-sans-ui), "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-num:
+    var(--font-mono-ui), "Geist Mono", "SFMono-Regular", Consolas, monospace;
+}

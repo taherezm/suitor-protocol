@@ -1,0 +1,972 @@
+/* Shared page furniture: the metric ledger, data tables, the deposit dialog,
+   the documentation layout and the 404.
+
+   The pool and underwriting routes are gone; their content lives in the home
+   page sections styled by sections.css, so everything that only dressed those
+   two pages has been removed from here. What is left is either shared with a
+   home section (`.metrics`, `.data-table`, `.outcome-table`) or belongs to a
+   route that still exists. */
+
+/* ---------- Shared page furniture ---------- */
+
+.eyebrow {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+.section-label {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--text-3);
+  margin-bottom: 22px;
+}
+.section-label > span {
+  color: var(--text-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.page-intro {
+  padding: 56px 0 44px;
+}
+.page-intro h1 {
+  margin-top: 20px;
+  max-width: 18ch;
+  font-size: clamp(38px, 4.6vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+}
+.intro-copy {
+  margin-top: 22px;
+  max-width: 62ch;
+  font-size: 17px;
+  color: var(--text-2);
+  line-height: 1.7;
+}
+.sample-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--stroke);
+}
+.sample-strip .badge {
+  flex-shrink: 0;
+}
+.sample-strip p {
+  color: var(--text-3);
+  font-size: 13px;
+}
+.target-note {
+  font-size: 13px;
+  color: var(--text-3);
+  max-width: 88ch;
+  margin-bottom: 26px;
+}
+
+/* ---------- Metric rows ---------- */
+
+.metrics {
+  margin: 36px 0 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.metrics > div {
+  border-left: 1px solid var(--stroke);
+  padding-left: 24px;
+}
+.metrics > div:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+.metrics dt {
+  font-size: 14px;
+  color: var(--text-3);
+}
+.metrics dd {
+  color: var(--text);
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  margin: 10px 0 0;
+  line-height: 1.2;
+}
+.metrics .metric-note {
+  display: block;
+  color: var(--text-4);
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 7px;
+  letter-spacing: 0;
+  line-height: 1.6;
+}
+.metrics-four {
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 30px;
+}
+.metrics-four dd {
+  font-size: clamp(24px, 2.6vw, 34px);
+}
+.metric-unit {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-3);
+}
+
+/* ---------- Tables ---------- */
+
+.table-scroll {
+  overflow-x: auto;
+}
+/* Below the width where a data table still fits, the scroller's right edge is
+   faded so the cut reads as "there is more this way" rather than as a bug. The
+   ticker is masked the same way. Only applied where the table actually
+   overflows, so a desktop table is never faded for nothing. Anything that has
+   to wrap instead of scroll belongs outside this box. */
+@media (max-width: 860px) {
+  .table-scroll {
+    mask-image: linear-gradient(90deg, #000 90%, transparent);
+  }
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 15px;
+  margin-top: 16px;
+}
+.data-table caption {
+  text-align: left;
+  color: var(--text-3);
+  font-size: 13px;
+  padding-bottom: 20px;
+  max-width: 88ch;
+}
+.data-table th,
+.data-table td {
+  padding: 17px;
+  border-bottom: 1px solid var(--stroke);
+  vertical-align: middle;
+}
+.data-table th:first-child,
+.data-table td:first-child {
+  padding-left: 0;
+}
+.data-table th:last-child,
+.data-table td:last-child {
+  padding-right: 0;
+}
+.data-table thead th {
+  font-weight: 400;
+  color: var(--text-3);
+  font-size: 13px;
+  border-top: 1px solid var(--stroke);
+  padding-block: 13px;
+  white-space: nowrap;
+}
+.data-table tbody th {
+  font-weight: 400;
+  color: var(--text);
+}
+.data-table tbody tr {
+  transition: background-color var(--fast) var(--ease);
+}
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.data-table .numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text);
+}
+.table-secondary {
+  display: block;
+  font-size: 14px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+.data-table tfoot th {
+  font-weight: 500;
+  color: var(--text);
+}
+.data-table tfoot {
+  font-size: 13px;
+}
+.data-table tfoot td:last-child {
+  text-align: right;
+  color: var(--text-3);
+}
+
+.outcome-table {
+  margin-top: 28px;
+}
+.outcome-table th:first-child {
+  width: 27%;
+}
+.outcome-table td:last-child {
+  color: var(--text-3);
+}
+
+/* ---------- Deposit dialog ---------- */
+
+.deposit-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(540px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  margin: auto;
+  padding: 24px 30px 30px;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-frame);
+  box-shadow: var(--highlight);
+  color: var(--text-2);
+  background: var(--bg-raise);
+}
+/* The dialog's entrance and exit are transitions, not animations, and live in
+   motion.css so it can leave as well as arrive. */
+.deposit-dialog::backdrop {
+  background: rgb(0 0 0 / 76%);
+  backdrop-filter: blur(4px);
+}
+.dialog-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.close-button {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  line-height: 1;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-control);
+}
+.close-button:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+.dialog-step {
+  margin: 22px 0 12px;
+  color: var(--text-3);
+}
+.deposit-dialog h2 {
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  outline: none;
+}
+.dialog-description {
+  color: var(--text-3);
+  font-size: 15px;
+  margin: 14px 0 24px;
+}
+.input-label {
+  display: block;
+  font-size: 14px;
+  color: var(--text-2);
+  margin-bottom: 10px;
+}
+.amount-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-input);
+  background: var(--bg-sunken);
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 28px;
+  transition: border-color var(--fast) var(--ease);
+}
+.amount-input > span {
+  color: var(--text-4);
+}
+.amount-input input {
+  border: 0;
+  outline: none;
+  min-width: 0;
+  width: 100%;
+  color: var(--text);
+  background: transparent;
+  border-radius: 0;
+  font-variant-numeric: tabular-nums;
+}
+.amount-input input::placeholder {
+  color: var(--text-4);
+}
+.amount-input:focus-within {
+  border-color: var(--stroke-bright);
+}
+/* The heavier ring is for keyboard focus only; a click already shows intent. */
+.amount-input:has(input:focus-visible) {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+.amount-input input:focus-visible {
+  outline: none;
+}
+.input-invalid {
+  border-color: var(--text);
+  border-width: 2px;
+}
+#amount-hint {
+  margin-top: 12px;
+  color: var(--text-3);
+}
+.form-error {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  padding-left: 12px;
+  border-left: 2px solid var(--text);
+}
+.demo-assumptions {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--stroke);
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+.demo-assumptions > span {
+  color: var(--text-3);
+}
+.demo-assumptions strong {
+  font-weight: 400;
+  color: var(--text);
+}
+.demo-assumptions p {
+  color: var(--text-4);
+  font-size: 13px;
+  width: 100%;
+}
+.quote-rows {
+  margin: 0 0 22px;
+  border-top: 1px solid var(--stroke);
+}
+.quote-rows > div {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--stroke);
+  padding: 16px 0;
+}
+.quote-rows dt {
+  font-size: 14px;
+  color: var(--text-3);
+}
+.quote-rows dd {
+  margin: 0;
+  text-align: right;
+  color: var(--text);
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+.quote-rows dd span {
+  display: block;
+  color: var(--text-4);
+  font-size: 12px;
+}
+.back-button {
+  display: block;
+  padding: 12px;
+  margin: 10px auto -10px;
+  border: 0;
+  color: var(--text-3);
+  background: transparent;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.back-button:hover {
+  color: var(--text);
+}
+.confirmation-note {
+  background: #121316;
+  border: 1px solid var(--stroke);
+  border-left: 1px solid var(--stroke-bright);
+  border-radius: var(--r-control);
+  padding: 16px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+/* ---------- Docs ----------
+   Two columns: a glass rail that stays with the reader, and one measure of
+   text. The rail is an object you can see the edges of; the article is set as
+   a certificate, lit from above. No engraving: bands and borders belong to the
+   site footer and nowhere else. */
+
+.docs-layout {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  gap: 56px;
+  min-height: 60vh;
+  padding-bottom: clamp(56px, 7vw, 104px);
+}
+
+.docs-sidebar {
+  position: sticky;
+  top: var(--nav-offset);
+  align-self: start;
+  min-width: 0;
+  padding-top: 40px;
+}
+.docs-rail {
+  border-radius: var(--r-frame);
+  padding: 16px;
+}
+.docs-rail-title {
+  padding: 4px 16px 14px;
+  font-family: var(--font-num);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--text-4);
+}
+
+/* The disclosure button only exists once the rail folds; see the 860px block. */
+.docs-toggle {
+  display: none;
+}
+.docs-chevron {
+  margin-left: auto;
+  color: var(--text-3);
+}
+.docs-toggle[aria-expanded="true"] .docs-chevron {
+  transform: rotate(180deg);
+}
+
+.docs-nav {
+  position: relative;
+  display: grid;
+  gap: 2px;
+}
+/* Above the pill, which is absolutely positioned inside the same box. */
+.docs-nav a {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  color: var(--text-3);
+}
+.docs-nav .ix-row-label {
+  overflow-wrap: break-word;
+}
+/* The pill carries the state; the row only brightens, so the two never read as
+   two separate highlights. */
+.docs-nav a[aria-current],
+.docs-nav a[aria-current] .ix-row-n {
+  color: var(--text);
+}
+.docs-pill {
+  border-radius: var(--r-control);
+  background: var(--surface-hover);
+  box-shadow:
+    var(--highlight),
+    0 0 0 1px var(--stroke);
+}
+
+.docs-rail-note {
+  margin-top: 16px;
+  padding: 18px 16px 4px;
+  border-top: 1px solid var(--stroke);
+  color: var(--text-4);
+}
+.docs-rail-note > span {
+  font-size: 11px;
+}
+.docs-rail-note p {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.docs-article {
+  width: 100%;
+  min-width: 0;
+  max-width: 780px;
+  padding-top: 40px;
+}
+
+.docs-article-header {
+  position: relative;
+  isolation: isolate;
+  padding-top: 40px;
+  margin-bottom: 44px;
+}
+.docs-article-header > *:not(.docs-cone) {
+  position: relative;
+  z-index: 2;
+}
+/* Narrow enough that the cone never reaches the column edges, so nothing can
+   widen the document. */
+.docs-cone {
+  width: min(620px, 100%);
+  top: -190px;
+  filter: blur(30px) brightness(1.4);
+}
+/* Only the draft badge lives here now. The mono "Docs / Whitepaper" breadcrumb
+   that used to open the header has been removed, and so has the row's floor
+   height: the row is drawn only when there is a badge to draw. */
+.docs-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-3);
+}
+/* The title opens the document unless the badge is standing in front of it. */
+.docs-article h1 {
+  font-size: clamp(34px, 3.8vw, 50px);
+  line-height: 1.08;
+  letter-spacing: -0.032em;
+}
+.docs-meta + h1 {
+  margin-top: 18px;
+}
+.docs-lede {
+  margin-top: 20px;
+  max-width: 60ch;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.prose {
+  max-width: 68ch;
+}
+.prose h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  margin: 42px 0 14px;
+}
+.prose > h2:first-child {
+  margin-top: 0;
+}
+.prose p {
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.75;
+}
+.prose p + p {
+  margin-top: 18px;
+}
+/* A hairline at rest with a white rule drawn in over it from the left. Painted
+   as backgrounds rather than a pseudo-element so a link that wraps across two
+   lines still gets its underline on both. */
+.prose a {
+  color: var(--text);
+  text-decoration: none;
+  background-image:
+    linear-gradient(currentColor, currentColor),
+    linear-gradient(var(--stroke-bright), var(--stroke-bright));
+  background-repeat: no-repeat;
+  background-position:
+    0 100%,
+    0 100%;
+  background-size:
+    0 1px,
+    100% 1px;
+  transition: background-size var(--medium) var(--ease-out);
+}
+.prose a:hover,
+.prose a:focus-visible {
+  background-size:
+    100% 1px,
+    100% 1px;
+}
+
+.doc-note,
+.doc-formula {
+  position: relative;
+  overflow: hidden;
+  margin: 30px 0;
+  padding: 22px 26px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+}
+/* A lit left edge: the light the block stands in, never a status colour. */
+.doc-note::before,
+.doc-formula::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    var(--stroke-bright),
+    rgba(255, 255, 255, 0.03)
+  );
+}
+.doc-note strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+.doc-note p {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.doc-formula > span {
+  color: var(--text-3);
+}
+.doc-formula strong {
+  display: block;
+  margin: 12px 0;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+.doc-formula p {
+  font-size: 13px;
+}
+
+/* Leaving a document looks like the rest of the site: two pieces of glass. */
+.docs-pagination {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--stroke);
+}
+.docs-page-cell {
+  display: block;
+  min-width: 0;
+}
+.docs-page-card {
+  display: block;
+  height: 100%;
+  padding: 18px 20px;
+  border-radius: var(--r-card);
+}
+.docs-page-next .docs-page-card {
+  text-align: right;
+}
+.docs-page-kind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-num);
+  font-size: 12px;
+  color: var(--text-4);
+}
+.docs-page-next .docs-page-kind {
+  justify-content: flex-end;
+}
+.docs-page-arrow {
+  display: inline-flex;
+  color: var(--text-3);
+  transition: transform var(--medium) var(--ease-out);
+}
+.docs-page-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+.docs-page-back {
+  transform: rotate(180deg);
+}
+.docs-page-card:hover .docs-page-arrow,
+.docs-page-card:focus-visible .docs-page-arrow {
+  transform: translateX(3px);
+}
+.docs-page-card:hover .docs-page-back,
+.docs-page-card:focus-visible .docs-page-back {
+  transform: rotate(180deg) translateX(3px);
+}
+.docs-page-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: color var(--fast) var(--ease);
+}
+.docs-page-card:hover strong {
+  color: var(--text);
+}
+
+/* ---------- 404 ----------
+   One object, centred, standing in its own light. */
+
+.nf {
+  padding: clamp(16px, 4vw, 48px) 0 clamp(72px, 9vw, 128px);
+}
+.nf-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(48px, 8vw, 104px) 24px clamp(24px, 4vw, 40px);
+  text-align: center;
+}
+.nf-cone {
+  width: min(760px, 110%);
+  top: -22%;
+}
+.nf-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 44ch;
+  margin-inline: auto;
+}
+.nf-stage h1 {
+  margin-top: 22px;
+  font-size: clamp(38px, 5.4vw, 64px);
+}
+.nf-copy {
+  margin-top: 20px;
+  font-size: 17px;
+  color: var(--text-2);
+}
+.nf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1100px) {
+  .metrics-four > div {
+    padding-left: 20px;
+  }
+  .metrics-four > div:first-child {
+    padding-left: 0;
+  }
+  .docs-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 40px;
+  }
+}
+
+@media (max-width: 800px) {
+  .metrics-four {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 0;
+  }
+  .metrics-four > div:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .metrics-four dd {
+    font-size: 30px;
+  }
+  .data-table {
+    min-width: 635px;
+  }
+  .data-table th,
+  .data-table td {
+    padding-inline: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .section-label {
+    margin-bottom: 18px;
+  }
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin: 24px 0 0;
+  }
+  .metrics > div,
+  .metrics-four > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: baseline;
+    padding: 14px 0;
+    border-left: 0;
+    border-top: 1px solid var(--stroke);
+  }
+  .metrics dt {
+    font-size: 13px;
+  }
+  .metrics dd {
+    font-size: 26px;
+    text-align: right;
+    margin: 0;
+  }
+  .metrics .metric-note {
+    text-align: right;
+    font-size: 11px;
+    margin-top: 1px;
+  }
+  .page-intro {
+    padding: 32px 0 30px;
+  }
+  .page-intro h1 {
+    font-size: clamp(32px, 9vw, 44px);
+    margin-top: 18px;
+  }
+  .intro-copy {
+    font-size: 16px;
+    margin-top: 20px;
+  }
+  .sample-strip {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 20px;
+    margin-top: 20px;
+  }
+  .target-note {
+    margin-top: 12px;
+    font-size: 12px;
+  }
+  .deposit-dialog {
+    padding: 18px 20px 22px;
+    border-radius: var(--r-card);
+  }
+  .deposit-dialog h2 {
+    font-size: 24px;
+  }
+  .dialog-step {
+    margin-top: 16px;
+  }
+  .quote-rows > div {
+    gap: 16px;
+  }
+  .quote-rows dt {
+    font-size: 13px;
+  }
+  .quote-rows dd {
+    font-size: 17px;
+  }
+}
+
+/* ---------- Docs, folded ----------
+   Below this width the rail becomes a disclosure hung at the top of the page.
+   Everything docs- and 404-specific that changes on a narrow screen lives in
+   these two blocks, after the shared ones, so nothing above can fight it. */
+
+@media (max-width: 860px) {
+  .docs-layout {
+    display: block;
+    padding-bottom: clamp(48px, 9vw, 72px);
+  }
+  .docs-sidebar {
+    position: static;
+    padding-top: 24px;
+  }
+  .docs-rail {
+    padding: 8px;
+    border-radius: var(--r-card);
+  }
+  .docs-rail-title,
+  .docs-rail-note {
+    display: none;
+  }
+  .docs-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: var(--r-control);
+    background: transparent;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
+  }
+  .docs-toggle:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .docs-nav {
+    display: none;
+    padding-top: 6px;
+  }
+  .docs-nav.is-open {
+    display: grid;
+  }
+  /* Both keyframes are declared in nav.css and shared on purpose: the panel
+     under the bar and the panel under the rail are the same gesture. */
+  html.motion-ready .docs-nav.is-open {
+    animation: nav-panel-in 260ms var(--ease-out) both;
+    transform-origin: 50% 0;
+  }
+  html.motion-ready .docs-nav.is-open a {
+    animation: nav-link-in 320ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms + 60ms);
+  }
+  .docs-article {
+    padding-top: 28px;
+  }
+  .docs-article-header {
+    padding-top: 28px;
+    margin-bottom: 32px;
+  }
+  .docs-cone {
+    top: -150px;
+  }
+}
+
+@media (max-width: 600px) {
+  .docs-article h1 {
+    font-size: 32px;
+  }
+  .docs-lede {
+    font-size: 16px;
+  }
+  /* Every target a thumb has to hit is at least 44px tall here. The rail rows
+     and the pagination cards are already taller than that; the floor is
+     written down so a later change to the padding cannot quietly take it
+     away. The 404 actions get theirs from `.button` in base.css. */
+  .docs-row {
+    min-height: 44px;
+  }
+  .docs-page-card {
+    min-height: 44px;
+  }
+  .prose h2 {
+    font-size: 19px;
+    margin-top: 34px;
+  }
+  .doc-note,
+  .doc-formula {
+    padding: 20px;
+  }
+  .doc-formula strong {
+    font-size: 19px;
+  }
+  .docs-pagination {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 44px;
+    padding-top: 26px;
+  }
+  .docs-page-next .docs-page-card,
+  .docs-page-next .docs-page-kind {
+    text-align: left;
+    justify-content: flex-start;
+  }
+  .nf-stage {
+    padding-inline: 16px;
+  }
+  .nf-copy {
+    font-size: 16px;
+  }
+  .nf-actions .button {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

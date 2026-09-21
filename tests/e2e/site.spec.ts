@@ -1,10 +1,60 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { siteBaseURL, siteURL } from "./site-url";
 
+/** The floating bar is 72px tall and sits 16px from the top of the viewport. */
+const NAV_FLOOR = 60;
+
+/** Anchors glide, so nothing is measured until the page has stopped moving. */
+async function scrollSettled(page: Page) {
+  let previous = -1;
+  for (let i = 0; i < 40; i += 1) {
+    const y = await page.evaluate(() => window.scrollY);
+    if (y === previous) return;
+    previous = y;
+    await page.waitForTimeout(50);
+  }
+}
+
+/**
+ * A section that has been navigated to has to be readable where it lands.
+ *
+ * Asserting that the heading is merely in the viewport cannot catch the bug
+ * this exists for: a heading sitting under the fixed bar is still "in the
+ * viewport" by every definition Playwright has. So the box is measured, and the
+ * top edge has to clear the bar and stay inside the top 60% of the screen,
+ * which is the band a reader actually arrives in.
+ */
+async function expectHeadingLandsBelowNav(page: Page, group: string) {
+  const heading = page.locator(`${group} :is(h1, h2, h3)`).first();
+  await expect(heading).toBeVisible();
+  const viewport = page.viewportSize();
+  expect(viewport, "the project must define a viewport size").not.toBeNull();
+  const floor = viewport!.height * 0.6;
+  await scrollSettled(page);
+  await expect
+    .poll(
+      async () => {
+        const box = await heading.boundingBox();
+        if (!box) return "the heading has no box";
+        if (box.y <= NAV_FLOOR)
+          return `hidden under the navigation at ${Math.round(box.y)}px`;
+        if (box.y >= floor)
+          return `below the reading band at ${Math.round(box.y)}px`;
+        return "in the reading band";
+      },
+      { message: `${group} heading position after navigating to it` },
+    )
+    .toBe("in the reading band");
+}
+
+/**
+ * The site is one page plus the documentation, so `/pool` and `/underwriting`
+ * are no longer routes: they are sections of the home page, reached at
+ * `/#pool` and `/#underwriting`. Every assertion the suite made about them is
+ * kept, just aimed at the section instead of the route.
+ */
 const routes = [
   "/",
-  "/underwriting",
-  "/pool",
   "/docs",
   "/docs/whitepaper",
   "/docs/pool-shares",
@@ -49,6 +99,8 @@ for (const route of routes) {
       if (href.startsWith("#")) await expect(page.locator(href)).toHaveCount(1);
       else if (href.startsWith("/")) {
         expect(href.startsWith(new URL(siteBaseURL).pathname), href).toBe(true);
+        // An in-page link is rendered as `/suitor-protocol/#pool`, so the part
+        // before the hash is the page that has to answer.
         const result = await request.get(href.split("#")[0]);
         expect(result.status(), href).toBe(200);
       }
@@ -80,29 +132,45 @@ for (const route of routes) {
 test("primary navigation, wordmark, and whitepaper action work", async ({
   page,
 }, testInfo) => {
-  await page.goto(siteURL("/"));
+  const home = siteURL("/");
+  const mobile = testInfo.project.name === "mobile";
+  await page.goto(home);
   await expect(
     page.getByRole("heading", { name: "Litigation funding on Solana." }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Read the whitepaper" }).click();
+
+  const whitepaper = page.getByRole("link", { name: "Read the whitepaper" });
+  await expect(whitepaper).toHaveCount(1);
+  await whitepaper.click();
   await expect(page).toHaveURL(siteURL("/docs/whitepaper"));
   await expect(page.getByText("Draft", { exact: true })).toBeVisible();
-  if (testInfo.project.name === "mobile")
-    await page.getByRole("button", { name: "Menu" }).click();
-  await page
-    .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Underwriting" })
-    .click();
-  await expect(page).toHaveURL(siteURL("/underwriting"));
-  await page.getByRole("link", { name: "02 Outcome engine" }).click();
-  await expect(page).toHaveURL(/#outcomes$/);
+
+  const mainNav = page.getByRole("navigation", { name: "Main navigation" });
+  if (mobile) await page.getByRole("button", { name: "Menu" }).click();
+  await mainNav.getByRole("link", { name: "Underwriting" }).click();
+  await expect(page).toHaveURL(`${home}#underwriting`);
   await expect(
-    page.getByText("Methodology preview", { exact: true }),
+    page.getByRole("heading", {
+      name: "Every allocation starts with a review.",
+    }),
   ).toBeInViewport();
+  await expectHeadingLandsBelowNav(page, "#underwriting");
+
+  if (mobile) await page.getByRole("button", { name: "Menu" }).click();
+  await mainNav.getByRole("link", { name: "Outcomes" }).click();
+  await expect(page).toHaveURL(/#outcomes$/);
+  await expectHeadingLandsBelowNav(page, "#outcomes");
+
+  // Separately: the engine preview further down the same group is reachable
+  // and rendered, whatever the anchor did.
+  const methodology = page.getByText("Methodology preview", { exact: true });
+  await methodology.scrollIntoViewIfNeeded();
+  await expect(methodology).toBeVisible();
+
   await page
     .getByRole("link", { name: "Suitor Protocol", exact: true })
     .click();
-  await expect(page).toHaveURL(siteURL("/"));
+  await expect(page).toHaveURL(home);
 });
 
 test("documentation navigation is usable on mobile and desktop", async ({
@@ -136,14 +204,17 @@ test("documentation navigation is usable on mobile and desktop", async ({
 test("deposit validates, reviews, edits, and completes without making a transaction", async ({
   page,
 }, testInfo) => {
-  await page.goto(siteURL("/pool"));
+  await page.goto(siteURL("/"));
   const submissions: string[] = [];
   page.on("request", (request) => {
     if (request.method() === "POST") submissions.push(request.url());
   });
   const depositButton = page.getByRole("button", { name: "Preview deposit" });
+  await expect(depositButton).toHaveCount(1);
   await depositButton.click();
   const dialog = page.getByRole("dialog");
+  // The terminal's own inline quote field is labelled "Quote amount", so this
+  // label belongs to the dialog alone.
   const input = page.getByLabel("Amount in test dollars");
   await expect(dialog).toContainText("This is a simulation.");
   await expect(input).toBeFocused();
@@ -177,6 +248,7 @@ test("deposit validates, reviews, edits, and completes without making a transact
   await expect(
     dialog.getByRole("heading", { name: "Deposit simulated." }),
   ).toBeFocused();
+  // Nothing outside the dialog owns a live region, so this is unambiguous.
   await expect(page.getByRole("status")).toContainText(
     "Your deposit was simulated.",
   );
@@ -205,7 +277,7 @@ test("deposit validates, reviews, edits, and completes without making a transact
 test("dialog keeps keyboard focus inside and supports cancellation", async ({
   page,
 }) => {
-  await page.goto(siteURL("/pool"));
+  await page.goto(siteURL("/"));
   await page.getByRole("button", { name: "Preview deposit" }).click();
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press("Tab");
@@ -231,7 +303,7 @@ test("narrow screens and enlarged text do not overflow the reading layout", asyn
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 740 });
-  for (const route of ["/", "/pool", "/underwriting", "/docs/whitepaper"]) {
+  for (const route of ["/", "/docs", "/docs/whitepaper"]) {
     await page.goto(siteURL(route));
     expect(
       await page.evaluate(
