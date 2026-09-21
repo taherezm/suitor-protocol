@@ -1,0 +1,630 @@
+/* Home page sections that are not the hero, the terminal, the timeline or the
+   outcomes. Owner: page-sections engineer.
+
+   This is where the statement, the assessment file and the outcome engine live:
+   `.stmt-`, `.afile-` and `.engine-` respectively. It is imported after
+   pages.css and before the per-area files, so anything here can lean on the
+   shared surfaces without having to out-specify them.
+
+   Compose from surfaces.css (`.glass`, `.glass-frame`, `.slab`, `.section`,
+   `.section-head`) and motion.css (`.ix-row`, `.ix-card`, `.ix-grow-x`,
+   `.ix-draw-line`) rather than inventing new surfaces or new motion.
+
+   Three house rules are enforced throughout this file. Nothing bordered or
+   filled carries less than 16px of inner padding, and a card on this page
+   carries at least 20px on its left edge so no label starts against a stroke.
+   Nothing tracks the pointer. And never a hand-written -webkit- prefix:
+   lightningcss adds those and drops the standard property when both are
+   written out. The single exception is -webkit-text-stroke, which has no
+   standard counterpart for it to drop. */
+
+/* ---------- Shared: the ledger ----------
+   `.metrics` is styled in pages.css. Only the figure itself is changed here, so
+   the gradient clips to the numeral and leaves the note under it readable. */
+
+.metric-figure {
+  display: inline-block;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.metrics-four dd {
+  font-size: clamp(21px, 2.3vw, 30px);
+}
+
+/* The assumption on the ledger. Everything else in this row is a figure the
+   sample data actually carries, so the one that is only ever an assumption is
+   drawn the way an unrealised thing is drawn everywhere else on this site:
+   hollow, not filled. The solid muted colour is the floor for engines without
+   text-stroke, which is the one prefixed property in this file, because it has
+   no standard counterpart for lightningcss to drop. */
+.metric-dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+/* A rounded rectangle rather than a pill, and free to wrap. In the narrowest
+   column this ledger has, a nowrap pill is wider than the column it sits in,
+   and a grid track sized to it is what pushes a 320px page sideways. */
+.metric-dt .badge {
+  padding: 3px 9px;
+  border-radius: var(--r-control);
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: normal;
+}
+.metric-figure-hollow {
+  color: var(--text-3);
+}
+@supports (-webkit-text-stroke: 1px #ffffff) {
+  .metric-figure-hollow {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.6);
+  }
+}
+
+/* ---------- Shared: data rows ----------
+   The wash slides in from the left of the row. `.data-table tbody tr:hover` in
+   pages.css sets the `background` shorthand, which would wipe the gradient out,
+   so these selectors carry the extra class they need to win. */
+
+.data-table tbody tr.stmt-row {
+  background-color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.025) 58%,
+    transparent
+  );
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  transition: background-size var(--medium) var(--ease-out);
+}
+.data-table tbody tr.stmt-row:hover {
+  background-color: transparent;
+  background-size: 100% 100%;
+}
+.data-table tbody tr.stmt-row:hover .ix-row-n {
+  color: var(--text);
+  text-shadow: 0 0 14px rgba(205, 218, 255, 0.4);
+}
+
+/* ---------- Pool statement ---------- */
+
+.stmt-panel-outer {
+  margin-top: clamp(32px, 4vw, 56px);
+}
+/* One certificate. The footer is flush to the panel edge, so the panel clips. */
+.stmt-panel {
+  overflow: hidden;
+}
+/* The plate is inset from the frame on every side, and the left edge is the
+   one that shows: the pool name and the ledger labels all start on it, and at
+   the old floor they sat close enough to the stroke to read as flush. */
+.stmt-body {
+  padding: clamp(24px, 3vw, 34px);
+}
+
+.stmt-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+/* The name starts on the plate's left edge, where the case number used to. */
+.stmt-name {
+  font-size: clamp(22px, 2.4vw, 28px);
+  letter-spacing: -0.028em;
+  line-height: 1.2;
+}
+.stmt-strategy {
+  max-width: 76ch;
+  margin-top: 18px;
+  color: var(--text-2);
+  font-size: 15px;
+}
+
+.stmt-sample {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px 18px;
+}
+.stmt-sample .badge {
+  flex-shrink: 0;
+}
+.stmt-sample p {
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* The capital bar and its legend used to live here. They are gone: the
+   terminal directly above draws the same split from the same data, live and
+   hoverable, and a static second copy of it was the page repeating itself. */
+
+.stmt-target-note {
+  max-width: 88ch;
+  margin-top: 22px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* The deposit row is the raised lip at the foot of the statement. */
+.stmt-deposit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: clamp(18px, 2.4vw, 24px) clamp(24px, 3vw, 34px);
+  border-top: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: var(--highlight);
+}
+.stmt-deposit h3 {
+  font-size: 16px;
+}
+.stmt-deposit p {
+  margin-top: 4px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* A hairline that fades at both ends, in place of the engraved band that used
+   to sit here. Engraving is the footer's closing mark; it does not repeat
+   through the page. */
+.stmt-divider {
+  height: 1px;
+  margin: clamp(44px, 6vw, 80px) 0 clamp(30px, 4vw, 46px);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--stroke-strong) 22%,
+    var(--stroke-strong) 78%,
+    transparent
+  );
+}
+
+.stmt-table-head h3 {
+  font-size: clamp(22px, 2.4vw, 28px);
+  letter-spacing: -0.028em;
+  line-height: 1.2;
+}
+.stmt-table-count {
+  margin-top: 10px;
+}
+.stmt-table-outer {
+  margin-top: 22px;
+}
+.stmt-table-card {
+  padding: clamp(20px, 2.2vw, 26px);
+}
+.stmt-table-card .data-table {
+  margin-top: 0;
+}
+/* The table's description, kept out of the scroller so it wraps to the card. */
+.stmt-table-note {
+  max-width: 88ch;
+  margin-bottom: 18px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.stmt-scale {
+  margin-top: 16px;
+  font-size: 12px;
+}
+
+.stmt-window {
+  display: block;
+  white-space: nowrap;
+}
+/* A five year ruler, the same width on every row, so the windows compare. */
+.stmt-track {
+  position: relative;
+  display: block;
+  width: 136px;
+  height: 4px;
+  margin-top: 10px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.stmt-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(184, 192, 206, 0.6)
+  );
+  box-shadow: 0 0 12px rgba(205, 218, 255, 0.25);
+}
+
+.stmt-receive {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: clamp(32px, 5vw, 80px);
+  margin-top: clamp(56px, 7vw, 96px);
+  padding-top: clamp(32px, 4vw, 48px);
+  border-top: 1px solid var(--stroke);
+}
+.stmt-receive h3 {
+  font-size: clamp(22px, 2.6vw, 30px);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+.stmt-receive-copy p {
+  color: var(--text-2);
+}
+.stmt-receive-copy p + p {
+  margin-top: 18px;
+}
+.stmt-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin-top: 24px;
+}
+
+/* ---------- Assessment file ---------- */
+
+.afile-head-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+/* The heading is the first thing in the block now: the mono case tag that used
+   to sit above it is gone, so nothing pushes it down. */
+.afile-head-top h3 {
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.afile-note {
+  max-width: 64ch;
+  margin-top: 18px;
+  color: var(--text-3);
+  font-size: 15px;
+}
+
+.afile-outer {
+  margin-top: clamp(28px, 3.5vw, 44px);
+}
+/* A clean glass frame: the stroke, the lit top edge and a pool of light under
+   it, from `.glass-frame`. There used to be an engraved border drawn over this
+   card, and because the drawing stretches to its box the wave landed in a
+   different place at every width, striking through the first labels more often
+   than not. The plate is the object; it does not need a rope around it. */
+.afile-file {
+  position: relative;
+  overflow: hidden;
+}
+/* The plate itself. Nothing in it starts against the stroke: the request, the
+   terms and the assumption rows all clear the left edge by at least 24px. */
+.afile-inner {
+  position: relative;
+  z-index: 1;
+  padding: clamp(24px, 3.4vw, 44px);
+}
+
+.afile-summary {
+  display: grid;
+  grid-template-columns: 1fr 1.45fr;
+  gap: clamp(24px, 4vw, 46px);
+}
+.afile-request {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.afile-amount {
+  font-family: var(--font-num);
+  font-size: clamp(28px, 4.2vw, 44px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+.afile-terms {
+  margin: 0;
+  font-size: 14px;
+}
+.afile-terms > div {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: 20px;
+  padding: 12px 0;
+  border-top: 1px solid var(--stroke);
+}
+.afile-terms > div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.afile-terms dt {
+  color: var(--text-3);
+}
+.afile-terms dd {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.afile-details {
+  margin-top: clamp(20px, 2.6vw, 28px);
+  border-top: 1px solid var(--stroke);
+}
+/* Flex removes the disclosure marker without reaching for a vendor pseudo. */
+.afile-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  padding: 16px 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 15px;
+  cursor: pointer;
+  transition: color var(--fast) var(--ease);
+}
+.afile-summary-bar:hover {
+  color: var(--text);
+}
+.afile-summary-label {
+  color: var(--text);
+}
+.afile-chevron {
+  margin-left: auto;
+  color: var(--text-3);
+}
+
+.afile-rows {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-bottom: 6px;
+  font-size: 14px;
+}
+.afile-row {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  min-height: 44px;
+  padding: 14px 16px;
+}
+.afile-row-label {
+  color: var(--text);
+}
+.afile-row-value {
+  margin: 0;
+  color: var(--text-2);
+}
+
+/* ---------- Outcome engine ----------
+   The head is a plain `SectionHead`, centred at the same scale as every other
+   section. The scenario table that used to sit here is gone: the outcome cards
+   directly above already carry those four figures. */
+
+.engine-badge {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.engine-callout-outer {
+  margin-top: clamp(28px, 3.5vw, 44px);
+}
+.engine-callout {
+  padding: clamp(22px, 2.8vw, 32px);
+  padding-left: clamp(24px, 3vw, 36px);
+  border-left-color: var(--stroke-bright);
+}
+/* The lit edge: a filament down the left border, brightest in the middle. */
+.engine-callout::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 16px;
+  bottom: 16px;
+  width: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 255, 255, 0.85),
+    transparent
+  );
+}
+.engine-callout h3 {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+.engine-callout p {
+  margin-top: 12px;
+  color: var(--text-2);
+}
+.engine-callout sup {
+  font-size: 0.72em;
+}
+
+.engine-history {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: clamp(28px, 5vw, 72px);
+  margin-top: clamp(48px, 6vw, 72px);
+  padding-top: clamp(28px, 3.5vw, 40px);
+  border-top: 1px solid var(--stroke);
+}
+.engine-history h3 {
+  font-size: clamp(20px, 2.4vw, 26px);
+  letter-spacing: -0.028em;
+  line-height: 1.25;
+}
+.engine-history-copy p {
+  color: var(--text-2);
+}
+.engine-history-copy p + p {
+  margin-top: 18px;
+}
+.engine-history-link {
+  margin-top: 24px;
+}
+
+/* ---------- Deposit dialog ----------
+   A glass sheet rather than a dark rectangle. Nothing here touches the dialog's
+   names, ids, aria attributes or focus behaviour, which live in the component.
+
+   Opening has to be instant, and it was not. The sheet asked for a 22px
+   backdrop blur and the scrim for another 10px behind it, so pressing the
+   button meant compositing two full screen blurs before the first frame of the
+   entrance could be drawn; on a loaded machine that was seconds. The sheet is
+   nearly opaque now and carries a light blur, the scrim is a plain dark wash,
+   and the entrance is the scale and fade in motion.css, which never touches a
+   filter. */
+
+.deposit-dialog {
+  padding: clamp(22px, 3vw, 30px) clamp(24px, 3vw, 32px) clamp(24px, 3vw, 32px);
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-frame);
+  background: var(--surface);
+  background-color: rgba(11, 12, 14, 0.96);
+  box-shadow:
+    var(--highlight),
+    0 40px 120px -24px rgb(0 0 0 / 90%);
+  backdrop-filter: none;
+}
+.deposit-dialog::backdrop {
+  background: rgb(0 0 0 / 74%);
+  backdrop-filter: blur(4px);
+}
+
+/* Each step is its own pane, so a step change crossfades instead of snapping. */
+.dialog-pane {
+  animation: stmt-step-in 240ms var(--ease-out) both;
+}
+@keyframes stmt-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.deposit-dialog .amount-input {
+  padding: 14px 18px;
+  background: var(--bg-sunken);
+}
+.deposit-dialog .amount-input > span,
+.deposit-dialog .amount-input input {
+  font-family: var(--font-num);
+  font-size: clamp(24px, 6vw, 30px);
+  letter-spacing: -0.01em;
+}
+.deposit-dialog .amount-input:focus-within {
+  border-color: var(--stroke-bright);
+  box-shadow:
+    var(--highlight),
+    0 0 0 4px rgba(255, 255, 255, 0.07);
+}
+
+.deposit-dialog .quote-rows > div {
+  padding: 16px 0;
+}
+.deposit-dialog .quote-rows dd {
+  font-family: var(--font-num);
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.deposit-dialog .quote-rows dd span {
+  font-family: var(--font-ui);
+  letter-spacing: 0;
+}
+.deposit-dialog .confirmation-note {
+  padding: 16px 18px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1100px) {
+  .stmt-receive,
+  .engine-history {
+    gap: 40px;
+  }
+  .afile-row {
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 800px) {
+  .stmt-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .stmt-receive,
+  .engine-history,
+  .afile-summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .afile-terms > div {
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .stmt-sample {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .metrics-four dd,
+  .metrics dd {
+    font-size: 18px;
+  }
+  .stmt-deposit {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .stmt-deposit .button {
+    width: 100%;
+    justify-content: space-between;
+  }
+  /* The divider is a 1px rule at every width now, so there is nothing left
+     here to shorten; only the space around it comes down, which the clamps on
+     its margins already do. */
+  .afile-head-top {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .afile-terms > div,
+  .afile-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .afile-row {
+    padding: 14px 16px;
+  }
+  .afile-summary-bar {
+    gap: 10px;
+  }
+  .afile-summary-note {
+    min-width: 0;
+  }
+  .engine-callout h3 {
+    font-size: 18px;
+  }
+  .engine-callout p {
+    font-size: 15px;
+  }
+}

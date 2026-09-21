@@ -1,0 +1,155 @@
+/* Site footer. Owner: foundation.
+   A single hairline closes the page, and the house name is set underneath it
+   as an object rather than as a link. */
+
+.ft {
+  position: relative;
+  margin-top: clamp(72px, 9vw, 140px);
+  padding-bottom: 24px;
+}
+
+/* One hairline that fades out at both ends. No ornament: the owner had every
+   engraved band removed, this one last. */
+.ft-rule {
+  display: block;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--stroke-strong) 18%,
+    var(--stroke-strong) 82%,
+    transparent 100%
+  );
+}
+
+.ft-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  padding-top: clamp(28px, 4vw, 48px);
+}
+.ft-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-4);
+  letter-spacing: 0.2px;
+  margin-bottom: 10px;
+}
+.ft-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ft-list li {
+  display: flex;
+}
+.ft-list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  font-size: 15px;
+  color: var(--text-2);
+}
+.ft-list a:hover {
+  color: var(--text);
+}
+/* Status is not a list of links, so it must not be set like one. Three
+   statements of fact, a step smaller and quieter than the two columns beside
+   them, each opened by a hairline dash. The dash is drawn rather than typed:
+   a hyphen in the string would be read out as one and would copy with the
+   text. Nothing here has a hover state, because nothing here goes anywhere. */
+.ft-status li {
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 0;
+  padding-block: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-3);
+}
+.ft-status li::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 10px;
+  height: 1px;
+  /* Half a line down, so the rule sits on the middle of the first line rather
+     than on its cap height, and stays there when the line wraps. */
+  margin-top: 0.7em;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+/* Decorative only, and clipped so it can never widen the page.
+
+   There is no light sweep across the wordmark any more. It was painted through
+   `mix-blend-mode: overlay`, and a blend mode re-composites everything beneath
+   it for the whole 1.5s of the animation, which is one of the things that was
+   making the engraved band above it flash. The wordmark fades in with the
+   `Reveal` around it and does nothing else. */
+.ft-mark-wrap {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: clamp(24px, 4vw, 56px);
+}
+
+/* Drawn, not set. `textLength` pins the word to exactly the viewBox width and
+   the viewBox is exactly the content width, so the mark fills the footer at
+   every viewport and the platinum fade lives in the fill rather than a mask. */
+.ft-mark {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ft-mark text {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.ft-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin-top: clamp(16px, 2vw, 28px);
+  padding-top: 18px;
+  border-top: 1px solid var(--stroke);
+  font-size: 13px;
+  color: var(--text-4);
+}
+.ft-bottom a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--text-3);
+}
+.ft-bottom a:hover {
+  color: var(--text);
+}
+
+@media (max-width: 720px) {
+  .ft-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 20px;
+  }
+}
+@media (max-width: 600px) {
+  /* The links become thumb targets. The status lines are static text and stay
+     the size they are: padding them out to 44px would make them look tappable
+     again, which is the thing being fixed. */
+  .ft-list a {
+    min-height: 44px;
+    font-size: 15px;
+  }
+  .ft-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0;
+  }
+}

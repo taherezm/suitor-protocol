@@ -1,0 +1,277 @@
+/* The floating glass bar. Owner: motion + navigation engineer.
+   It hovers over the page rather than sitting on it, so the wrapper takes no
+   pointer events and only the bar itself does.
+
+   The site is one page plus the docs, so the bar is a position readout as much
+   as a menu: a pill glides to whichever section is being read, and a hairline
+   along the foot of the bar fills as the page is read through.
+
+   Never hand-write a -webkit- prefix here. lightningcss adds them, and when
+   both forms are present it keeps only the prefixed one, which is how the bar
+   silently lost its blur once already. */
+
+.nav-wrap {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 16px 0;
+  pointer-events: none;
+}
+
+.nav-bar {
+  pointer-events: auto;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  max-width: var(--content);
+  margin-inline: auto;
+  height: var(--nav-h);
+  padding: 0 12px 0 20px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-card);
+  box-shadow:
+    var(--highlight),
+    0 8px 32px -8px rgba(0, 0, 0, 0.6);
+  transition:
+    height var(--medium) var(--ease),
+    border-color var(--medium) var(--ease),
+    box-shadow var(--medium) var(--ease);
+}
+/* Frosted, not tinted: the fill and the blur are the same layer, so whatever
+   scrolls underneath is smeared past reading rather than merely dimmed.
+
+   That layer is a pseudo-element rather than the bar itself on purpose. An
+   element carrying a backdrop-filter becomes a Backdrop Root for its whole
+   subtree, and the mobile menu hangs below the bar with nothing of that root
+   behind it, so its own blur would sample an empty backdrop and do nothing. */
+.nav-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    137deg,
+    rgba(17, 18, 20, 0.72) 4.87%,
+    rgba(12, 13, 15, 0.86) 75.88%
+  );
+  backdrop-filter: blur(24px) saturate(160%);
+  transition: background-image var(--medium) var(--ease);
+}
+/* After a little scroll the bar tightens and thickens a little. It stays
+   frosted: opacity alone would turn it into a slab. */
+.nav-bar[data-scrolled="true"] {
+  height: 60px;
+  border-color: var(--stroke-strong);
+  box-shadow:
+    var(--highlight),
+    0 10px 36px -10px rgba(0, 0, 0, 0.7);
+}
+.nav-bar[data-scrolled="true"]::before {
+  background-image: linear-gradient(
+    137deg,
+    rgba(17, 18, 20, 0.84) 4.87%,
+    rgba(10, 11, 13, 0.93) 75.88%
+  );
+}
+
+.nav-mark {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  height: 40px;
+  padding-right: 4px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.nav-logo {
+  width: 22px;
+  height: 22px;
+  margin-right: 10px;
+  color: var(--text);
+  transition: transform var(--medium) var(--ease-out);
+}
+.nav-mark:hover .nav-logo {
+  transform: translateY(-1px);
+}
+
+/* ---------- Links ---------- */
+
+.nav-links {
+  position: relative;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-links a {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--r-control);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.nav-links a:hover {
+  color: var(--text);
+}
+/* The pill carries the state; the link only brightens, so the two never read
+   as two separate highlights. */
+.nav-links a[aria-current] {
+  color: var(--text);
+}
+.nav-pill {
+  border-radius: var(--r-control);
+}
+
+/* ---------- Right-hand action ---------- */
+
+.nav-right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.nav-cta {
+  min-height: 36px;
+  padding: 8px 14px;
+  font-size: 14px;
+  gap: 10px;
+}
+.nav-menu {
+  display: none;
+}
+
+/* Five links, a wordmark and an action need room. The action goes first, then
+   the links fold into the panel, each at the width where the bar's own content
+   would otherwise start to crowd. */
+@media (max-width: 1060px) {
+  .nav-cta {
+    display: none;
+  }
+  .nav-bar {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 900px) {
+  .nav-wrap {
+    padding-inline: 10px;
+  }
+  .nav-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    height: 60px;
+    padding: 0 10px 0 14px;
+  }
+  .nav-bar[data-scrolled="true"] {
+    height: 56px;
+  }
+  .nav-mark {
+    font-size: 15px;
+  }
+  .nav-menu {
+    grid-column: 2;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--stroke-strong);
+    border-radius: var(--r-control);
+    background: var(--surface);
+    box-shadow: var(--highlight);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .nav-menu:hover {
+    border-color: var(--stroke-bright);
+  }
+  .nav-menu:active {
+    transform: translateY(1px);
+  }
+  .nav-right {
+    display: none;
+  }
+
+  /* The menu is the same frosted glass as the bar, hung directly under it, and
+     it unfolds from its top edge with the links arriving in order. */
+  .nav-links {
+    display: none;
+    justify-self: stretch;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 8px;
+    transform-origin: 50% 0;
+    border: 1px solid var(--stroke);
+    border-radius: var(--r-card);
+    background: linear-gradient(
+      137deg,
+      rgba(17, 18, 20, 0.72) 4.87%,
+      rgba(12, 13, 15, 0.86) 75.88%
+    );
+    backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+      var(--highlight),
+      0 8px 32px -8px rgba(0, 0, 0, 0.6),
+      0 24px 60px -12px rgba(0, 0, 0, 0.7);
+  }
+  .nav-bar[data-open="true"] .nav-links {
+    display: flex;
+  }
+  html.motion-ready .nav-bar[data-open="true"] .nav-links {
+    animation: nav-panel-in 260ms var(--ease-out) both;
+  }
+  html.motion-ready .nav-bar[data-open="true"] .nav-links a {
+    animation: nav-link-in 320ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms + 70ms);
+  }
+  .nav-links a {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+}
+
+@keyframes nav-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nav-link-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
