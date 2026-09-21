@@ -149,7 +149,7 @@ export function DepositPreview({
             : "This is a simulation. No real funds or wallet signature are required."}
         </p>
         {step === "amount" && (
-          <form onSubmit={review} noValidate>
+          <form className="dialog-pane" onSubmit={review} noValidate>
             <label htmlFor="deposit-amount" className="input-label">
               Amount in test dollars
             </label>
@@ -198,7 +198,9 @@ export function DepositPreview({
           </form>
         )}
         {step !== "amount" && quote && (
-          <>
+          /* Keyed so a step change remounts the pane and replays its crossfade.
+             Focus is moved by the effect on `step`, which runs afterwards. */
+          <div className="dialog-pane" key={step}>
             <dl className="quote-rows">
               <div>
                 <dt>Simulated deposit</dt>
@@ -269,7 +271,7 @@ export function DepositPreview({
                 </button>
               </>
             )}
-          </>
+          </div>
         )}
       </dialog>
     </>

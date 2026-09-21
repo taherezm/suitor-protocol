@@ -1,0 +1,625 @@
+/* Life of a case: the pinned, scroll-driven phase timeline, its ingot canvas
+   and the cumulative cashflow chart. Owner: timeline agent. Prefix: tl-
+
+   The section has two presentations and one set of markup.
+
+   Unpinned is the default, and it is what this file describes first: a heading,
+   four glass cards, the figure and the chart, all in normal flow, all visible.
+   That is what a narrow screen gets, what a reader who asked for reduced motion
+   gets, and what is on the page before any JavaScript has run.
+
+   Pinned is everything under `.tl[data-pinned]`. The hook writes that attribute
+   only when there is room for the stage and the reader has not asked for less
+   motion, so no rule in that half can ever be the only way to see something.
+
+   `--tl-p` is the scroll position of the track, 0 to 1. It is written on the
+   section once per frame and read from here by the phase crossfade, the
+   scrubber and the chart's clip. It is 1 when nothing is driving it, which is
+   why the unpinned chart is simply complete. */
+
+.tl {
+  --tl-p: 1;
+  position: relative;
+  padding-block: clamp(48px, 7vw, 108px);
+}
+
+.tl-track {
+  position: relative;
+}
+
+.tl-stage {
+  position: relative;
+}
+
+/* There is no hairline field behind the stage. The grid was cut from the whole
+   site on the owner's direction; the stage is dark glass and light. */
+
+.tl-stage-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 4vw, 44px);
+}
+
+/* ---------- Columns ---------- */
+
+.tl-cols {
+  display: grid;
+  gap: 28px;
+}
+
+.tl-col {
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .tl-cols {
+    grid-template-columns: 5fr 7fr;
+    gap: 48px;
+    align-items: center;
+  }
+}
+
+/* ---------- The label ---------- */
+
+.tl-eyebrow {
+  justify-content: flex-start;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--text-3);
+}
+/* One rule, trailing the label, because the column is left aligned. */
+.tl-eyebrow::before {
+  display: none;
+}
+
+/* ---------- Phases ---------- */
+
+.tl-phases {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tl-phase {
+  padding: 20px;
+  border-radius: var(--r-card);
+}
+
+.tl-month {
+  font-family: var(--font-num);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.tl-phase-title {
+  margin-top: 10px;
+  font-size: clamp(24px, 4.4vw, 32px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.tl-phase-body {
+  margin-top: 12px;
+  max-width: 44ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+@media (max-width: 600px) {
+  .tl-phase {
+    padding: 16px;
+  }
+}
+
+/* ---------- The figure ---------- */
+
+.tl-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.tl-bar {
+  margin: 0;
+}
+
+.tl-canvas {
+  position: relative;
+  display: block;
+  height: clamp(170px, 26vw, 260px);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+
+.tl-bar-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin-top: 14px;
+}
+.tl-bar-id {
+  color: var(--text);
+}
+.tl-bar-claim {
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text-3);
+}
+.tl-bar-amount {
+  margin-left: auto;
+  color: var(--text);
+}
+
+@media (max-width: 600px) {
+  .tl-frame {
+    gap: 16px;
+    padding: 16px;
+  }
+}
+
+/* ---------- Chart ---------- */
+
+.tl-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--stroke);
+}
+
+.tl-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+.tl-chart-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* The plot's box is set here and the drawing is taken out of flow inside it, so
+   the measured box can never be a function of what was drawn into it. That is
+   what keeps the resize observer from chasing its own tail. */
+.tl-chart-plot {
+  position: relative;
+  height: clamp(200px, 30vw, 300px);
+}
+
+.tl-chart-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The clip is the whole plot until something drives `--tl-p`. The 8px lead is
+   what puts the starting point on screen at month 0: the capital has gone out
+   before anything else has happened. */
+.tl-clip-rect {
+  width: calc(
+    var(--tl-x0, 0) * 1px + 8px + var(--tl-p, 1) * var(--tl-plotw, 900) * 1px
+  );
+}
+
+.tl-chart-rules line {
+  stroke: var(--stroke-strong);
+  stroke-width: 1;
+}
+/* Break-even is the line that decides whether a legal win was an investment,
+   so it is the brightest rule in the plot. */
+.tl-chart-zero {
+  stroke: var(--stroke-bright);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+.tl-chart-x line {
+  stroke: var(--stroke-strong);
+  stroke-width: 1;
+}
+.tl-chart-y text,
+.tl-chart-x text {
+  font-size: 11px;
+  fill: var(--text-3);
+}
+.tl-chart-axis-name {
+  font-size: 11px;
+  fill: var(--text-4);
+}
+
+.tl-line {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Loss is hollow and broken, never a colour. */
+.tl-line-loss {
+  stroke-width: 1.25;
+}
+
+.tl-mark-dot {
+  fill: #ffffff;
+}
+.tl-mark-hollow {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.25;
+  stroke-opacity: 0.75;
+}
+/* A label can land on top of another scenario's riser, so it carries the page
+   ground with it as a halo painted under the glyphs. */
+.tl-mark-label {
+  font-size: 11px;
+  fill: var(--text-3);
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.tl-mark-amount {
+  fill: var(--text);
+}
+
+/* Each ending arrives, rather than having always been there. */
+.tl-mark {
+  opacity: 0;
+  transform: scale(0.4);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity var(--fast) var(--ease),
+    transform var(--medium) var(--ease-out);
+}
+.tl-mark[data-reached] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Legend ----------
+   The same four figures as real text, for any width at which the chart cannot
+   carry its own end labels. */
+
+.tl-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tl-legend li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-width: 0;
+}
+.tl-legend-rule {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 16px;
+  height: 0;
+  border-top: 2px solid rgba(255, 255, 255, var(--o, 0.8));
+}
+.tl-legend-rule[data-hollow] {
+  border-top-style: dashed;
+}
+.tl-legend-name {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+  overflow-wrap: break-word;
+}
+.tl-legend-value {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.tl-legend-amount {
+  margin-left: 10px;
+  color: var(--text);
+}
+
+@media (max-width: 760px) {
+  .tl-legend {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Scrubber ----------
+   Only meaningful while the reader is driving the stage, so it exists only
+   there. Everything it shows is written out in the phases above it. */
+
+.tl-scrub {
+  display: none;
+}
+
+/* ---------- Pinned ----------
+   Everything below needs `data-pinned`, which only ever appears when the stage
+   has room and the reader has not asked for less motion. */
+
+.tl[data-pinned] .tl-track {
+  height: 380vh;
+}
+
+.tl[data-pinned] .tl-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.tl[data-pinned] .tl-stage-inner {
+  height: 100%;
+  justify-content: center;
+  gap: clamp(20px, 3vh, 36px);
+  /* The stage starts at the top of the viewport, so its content, not the
+     section, is what clears the floating bar, and nothing sits against either
+     edge of the screen. */
+  padding-top: calc(var(--nav-offset) + 16px);
+  padding-bottom: clamp(20px, 4vh, 40px);
+}
+
+.tl[data-pinned] .tl-cols {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.tl[data-pinned] .tl-col-text {
+  align-self: center;
+}
+
+.tl[data-pinned] .tl-col-figure {
+  min-height: 0;
+  height: 100%;
+}
+.tl[data-pinned] .tl-frame {
+  height: 100%;
+}
+
+.tl[data-pinned] .tl-canvas {
+  flex: 0 0 auto;
+  height: clamp(110px, 17vh, 240px);
+}
+
+.tl[data-pinned] .tl-chart {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* A definite flex basis, never the drawing's own height. */
+.tl[data-pinned] .tl-chart-plot {
+  flex: 1 1 150px;
+  min-height: 150px;
+  height: auto;
+}
+/* Pinning only happens at a width where the chart carries its own end labels,
+   so here the legend would repeat them and cost the plot the height it needs.
+   The figures are still on the page: on the chart, and in its description. */
+.tl[data-pinned] .tl-legend {
+  display: none;
+}
+
+/* The lines are revealed by the clip travelling with the scroll, so the
+   entrance draw is switched off; the dashed loss line keeps its own dashes. */
+.tl[data-pinned] .ix-draw-line {
+  stroke-dasharray: none;
+}
+
+/* ---------- Pinned phases ----------
+   Four phases in one grid cell. The stack never reflows, so the column holds
+   still while the sentences change inside it. */
+
+.tl[data-pinned] .tl-phases {
+  gap: 0;
+  margin-top: 28px;
+}
+
+.tl[data-pinned] .tl-phase {
+  grid-area: 1 / 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  opacity: 0;
+  transform: translateY(12px);
+  /* Opacity and transform only. The hidden half used to carry `blur(5px)` as
+     well, which meant four stacked paragraphs each ran a convolution over their
+     own painted box every frame of a crossfade that fires four times on the way
+     down the track. It read as a fade anyway, and a filter that animates is the
+     one thing on this page that can make a neighbouring layer shimmer. */
+  transition:
+    opacity var(--medium) var(--ease),
+    transform var(--medium) var(--ease-out);
+}
+
+.tl[data-pinned] .tl-phases .tl-phase[data-on] {
+  opacity: 1;
+  transform: none;
+}
+
+.tl[data-pinned] .tl-phase-title {
+  font-size: clamp(32px, 3.4vw, 48px);
+  line-height: 1.06;
+}
+.tl[data-pinned] .tl-phase-body {
+  margin-top: 16px;
+  font-size: 16px;
+}
+
+/* ---------- Pinned scrubber ---------- */
+
+.tl[data-pinned] .tl-scrub {
+  display: block;
+}
+
+.tl-scrub-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.tl-scrub-label {
+  font-size: 13px;
+  color: var(--text-3);
+}
+.tl-scrub-month {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.tl-axis {
+  position: relative;
+  height: 1px;
+  margin-bottom: 34px;
+}
+.tl-axis-rule {
+  position: absolute;
+  inset: 0;
+  background: var(--stroke-strong);
+}
+.tl-axis-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--text);
+  transform: scaleX(var(--tl-p));
+  transform-origin: 0 50%;
+}
+/* A full width box translated by the progress, so the marker travels on a
+   transform and the axis never has its layout touched. */
+.tl-axis-cursor {
+  position: absolute;
+  inset: 0;
+  transform: translateX(calc(var(--tl-p) * 100%));
+}
+.tl-axis-marker {
+  position: absolute;
+  top: -3.5px;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--text);
+  box-shadow: 0 0 0 3px var(--bg);
+}
+
+.tl-ticks {
+  position: absolute;
+  inset: 0;
+}
+.tl-tick {
+  position: absolute;
+  top: 0;
+  left: calc(var(--t) / 60 * 100%);
+  width: 0;
+}
+.tl-tick::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 0;
+  width: 1px;
+  height: 11px;
+  background: var(--stroke-strong);
+}
+.tl-tick-n {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.tl-tick:first-child .tl-tick-n {
+  transform: none;
+}
+.tl-tick:last-child .tl-tick-n {
+  transform: translateX(-100%);
+}
+
+/* The phase strip. Every band is positioned from its own months against the
+   same 0 to 60 ruler the ticks are drawn on, so the two can never disagree.
+   One row per phase, because the phases overlap. */
+
+.tl-segs {
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tl-seg {
+  position: relative;
+  height: clamp(28px, 3.6vh, 34px);
+}
+.tl-seg-band {
+  position: absolute;
+  top: 0;
+  left: calc(var(--from) / 60 * 100%);
+  width: max(3px, calc((var(--to) - var(--from)) / 60 * 100%));
+  height: 4px;
+  border-radius: 2px;
+  background: var(--stroke-strong);
+  transition:
+    background var(--medium) var(--ease),
+    box-shadow var(--medium) var(--ease);
+}
+.tl-seg-text {
+  position: absolute;
+  top: 11px;
+  left: calc(var(--from) / 60 * 100%);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  white-space: nowrap;
+}
+.tl-seg-months {
+  font-size: 12px;
+  color: var(--text-3);
+  transition: color var(--medium) var(--ease);
+}
+.tl-seg-name {
+  font-size: 13px;
+  color: var(--text-3);
+  transition: color var(--medium) var(--ease);
+}
+.tl-seg[data-on] .tl-seg-band {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(184, 192, 206, 0.6)
+  );
+  box-shadow: 0 0 12px rgba(205, 218, 255, 0.3);
+}
+.tl-seg[data-on] .tl-seg-months {
+  color: var(--text-2);
+}
+.tl-seg[data-on] .tl-seg-name {
+  color: var(--text);
+}

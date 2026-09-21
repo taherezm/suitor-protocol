@@ -1,0 +1,402 @@
+/* Home hero: the stage, the ingot canvas, the drafting lines and the tape.
+   Owner: 3D + hero engineer. Class prefixes: hero-, ingot-
+
+   The hero is a lit object standing in its own light, and everything around it
+   is built to keep your eye on that object: the copy is centred and narrow, the
+   ornament is hairline-thin and never rectilinear, and the only saturated thing
+   on the page is the cool tint inside the light.
+
+   Shared utilities come from surfaces.css (.glass, .light-cone,
+   .guilloche, .two-tone, .chip) and motion.css (.ix-drift, .ix-draw-line,
+   .ix-marquee, .ix-marquee-stop). Never hand-write a -webkit- prefix here;
+   lightningcss adds them and drops the standard property when both are given.
+
+   The hero owns its own top space, because base.css drops main's padding
+   whenever a .hero is on the page. Do not rename the root class. */
+
+/* Two screens, in this order and never overlapping.
+
+   The first is the hero and nothing else: chip, headline, paragraph and the two
+   actions centred in 100svh with the fixed bar accounted for, and a scroll cue
+   at the foot of it. Half an ingot peeking over the fold reads as a page that
+   has not finished loading, so the stage begins strictly below it.
+
+   The second is the object: its own block of roughly 84svh with the bars
+   centred in it, then the chips and the readout, then the tape. */
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: clamp(56px, 8vw, 112px);
+}
+
+/* The room light, well above the fold, so the type is standing in something. */
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: -360px;
+  left: 50%;
+  translate: -50% 0;
+  width: min(1500px, 150%);
+  height: 820px;
+  pointer-events: none;
+  background: radial-gradient(
+    46% 50% at 50% 50%,
+    rgba(205, 218, 255, 0.11),
+    transparent 70%
+  );
+  filter: blur(30px);
+}
+
+/* The first screen. `min-height` rather than `height`, so a narrow viewport or
+   a reader at 200% text grows the block instead of clipping the actions, and
+   `svh` rather than `vh`, so a phone's retracting toolbar cannot push the last
+   line under the fold. The padding is what keeps the centring honest: the bar
+   floats over the top and the cue sits in the bottom. */
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 100svh;
+  padding-top: var(--nav-offset);
+  padding-bottom: clamp(76px, 10svh, 112px);
+  text-align: center;
+}
+
+.hero-step {
+  display: inline-flex;
+}
+
+/* Wide enough that the continuation sets in two lines under an 80px headline
+   rather than four with a two word orphan. */
+.hero-copy {
+  max-width: 620px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ---------- The stage ----------
+   An open box, not a panel: there are no corners drawn on it at all, and the
+   only edge is the light. */
+
+/* The second screen. The stage gets a block of its own so the bars are met
+   whole and centred, never cropped by the bottom of the viewport. */
+.hero-stage-shell {
+  width: 100%;
+  padding-top: clamp(24px, 4vw, 56px);
+}
+
+.hero-stage-block {
+  width: 100%;
+}
+
+/* A height rather than a ratio: the stage is measured against the screen it is
+   read on, and the scene widens its own lens to suit whatever aspect that
+   leaves. The cap stops a very tall window from turning it into a pillar.
+   Narrow screens go back to a ratio in the media queries at the foot. */
+.hero-stage {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 1100px;
+  height: clamp(420px, 84svh, 820px);
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: var(--r-frame);
+}
+
+/* Engine-turned rosette. It is deliberately larger than the stage and cropped
+   by it: a 1000-unit drawing squeezed into 300px is a grey wash, and only at
+   this size do the hairlines separate and read as engraving.
+
+   Centred with the `translate` property, not a transform, because .ix-drift
+   owns the transform and the two compose. */
+.hero-rosette {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: clamp(520px, 112%, 1240px);
+  height: auto;
+  aspect-ratio: 1;
+  /* Only the last, densest band is dissolved into the ground. Any more than
+     this and the engraving becomes the faint wisp it must never be. */
+  mask-image: radial-gradient(closest-side, #000 0%, #000 56%, transparent 94%);
+}
+
+/* What is left of the drafting sheet: two diagonals and two arcs, drawn in by
+   `.ix-draw-line` when the stage is scrolled to. The centre square, the horizon
+   and the hairline floor grid are gone; the floor is light now, and the scene
+   draws it. */
+.hero-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.085);
+}
+
+.hero-cone {
+  z-index: 1;
+  top: -34%;
+}
+
+/* ---------- The canvas ----------
+   Generic, because the timeline uses the same component. The stand-in is what
+   renders before the scene exists, when there is no GPU, and with JavaScript
+   switched off, so the stage is never an empty box. */
+
+.ingot {
+  position: relative;
+  display: block;
+}
+
+.ingot-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity var(--slow) var(--ease-out);
+}
+.ingot[data-ready] .ingot-canvas {
+  opacity: 1;
+}
+
+.ingot-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition: opacity var(--medium) var(--ease);
+}
+.ingot[data-ready] .ingot-fallback {
+  opacity: 0;
+}
+
+/* Declared after the generic block on purpose: both selectors weigh the same,
+   so `.ingot { position: relative }` would otherwise win on source order and
+   drop the canvas back into the flow, where it takes its intrinsic 2:1 ratio
+   and overflows the stage. */
+.hero-ingot {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* ---------- Chips and readout ----------
+   The keyboard equivalent of hovering a bar. Every figure the canvas shows is
+   written here in text, which is what a screen reader and the tests read. */
+
+.hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 18px auto 0;
+  text-align: left;
+}
+
+/* A grid, not a wrapping flex row: every chip gets the same column width and,
+   because grid items stretch, the same height, so a label that wraps to two
+   lines cannot make its neighbour a different size. */
+.hero-chips {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+}
+
+/* Top aligned on purpose: the ids are a column and have to read as one whether
+   or not the claim under them takes a second line. The padding is the floor the
+   owner asked for, 16px across and 12px down, and nothing may take it below
+   that at any width. */
+.hero-chip {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 4px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--text-2);
+  text-align: left;
+  transition:
+    color var(--fast) var(--ease),
+    transform var(--medium) var(--ease-out);
+}
+.hero-chip:hover,
+.hero-chip[data-active] {
+  color: var(--text);
+}
+.hero-chip:active {
+  transform: translateY(1px);
+}
+
+.hero-chip-id {
+  font-size: 12px;
+  color: var(--text-3);
+  transition:
+    color var(--fast) var(--ease),
+    text-shadow var(--medium) var(--ease);
+}
+.hero-chip:hover .hero-chip-id,
+.hero-chip:focus-visible .hero-chip-id,
+.hero-chip[data-active] .hero-chip-id {
+  color: var(--text);
+  text-shadow: 0 0 14px rgba(205, 218, 255, 0.45);
+}
+
+.hero-chip-claim {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.hero-readout {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding: 20px 22px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+}
+
+.hero-readout-in {
+  display: grid;
+  gap: 14px;
+  animation: hero-readout-in 320ms var(--ease-out) both;
+}
+
+@keyframes hero-readout-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-readout-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.hero-readout-id {
+  padding: 3px 9px;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-chip);
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.hero-readout-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 12px 18px;
+  margin: 0;
+}
+
+.hero-stat dt {
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.hero-stat dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Narrow ----------
+   Verified at 1440, 1280, 390 and 320: nothing touches an edge and nothing
+   widens the page. */
+
+@media (max-width: 900px) {
+  .hero-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Below this width a screen-height stage is taller than it is wide, which
+   crops the stack rather than framing it, so the block goes back to a ratio. */
+@media (max-width: 760px) {
+  .hero-stage {
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-inner {
+    gap: 20px;
+    padding-bottom: clamp(68px, 12svh, 96px);
+  }
+  .hero-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .hero-actions .button {
+    width: 100%;
+    justify-content: space-between;
+  }
+  /* A thumb needs 44px. `.chip` is a 31px pill everywhere else on the site, so
+     the floor is raised here rather than in surfaces.css. */
+  .hero-step .chip {
+    min-height: 44px;
+  }
+  .hero-chip {
+    min-height: 56px;
+  }
+  .hero-readout {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-stage {
+    aspect-ratio: 4 / 5;
+  }
+  .hero-chips {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

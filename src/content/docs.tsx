@@ -171,7 +171,7 @@ export const docs: Record<DocSlug, DocContent> = {
           <p>No fees assumed. Live pricing and precision rules are pending.</p>
         </div>
         <p>
-          The <Link href="/pool">pool deposit preview</Link> uses this formula.
+          The <Link href="/#pool">pool deposit preview</Link> uses this formula.
           It does not update balances or create a persistent holding. Closing
           the preview discards the simulation.
         </p>
@@ -235,11 +235,11 @@ export const docs: Record<DocSlug, DocContent> = {
         </p>
         <h2>The current interface</h2>
         <p>
-          The <Link href="/underwriting#process">sample assessment</Link>{" "}
-          presents a fictional $250,000 request. Its inputs are assumptions, and
-          its operator approval is pending. The pool table is a separate
-          portfolio illustration, not evidence that this request has been
-          approved or funded.
+          The <Link href="/#assessment">sample assessment</Link> presents a
+          fictional $250,000 request. Its inputs are assumptions, and its
+          operator approval is pending. The pool table is a separate portfolio
+          illustration, not evidence that this request has been approved or
+          funded.
         </p>
         <p>
           A live service should return assessment inputs with their sources and
