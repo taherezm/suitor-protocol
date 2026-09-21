@@ -1,0 +1,485 @@
+/* The motion system. Owner: motion + navigation engineer.
+   Imported straight after surfaces.css, so every later stylesheet can override
+   a transition without having to fight for specificity.
+
+   Two rules govern everything in this file.
+
+   1. Nothing may depend on motion to become visible. The hidden half of a
+      scroll reveal is written under `html.motion-ready`, a class a client
+      bootstrap adds only when the reader has not asked for reduced motion. No
+      JavaScript, reduced motion, or a failed hydration all leave the page fully
+      readable, which is also what keeps the e2e suite honest.
+   2. Only transform, opacity and filter animate. Nothing here animates a
+      layout property, so no reveal can reflow the page under itself.
+
+   Never hand-write a -webkit- prefix in this file; lightningcss adds them and
+   silently drops the standard property when both are present. */
+
+/* ---------- Scroll reveals ----------
+   `data-reveal` is the hook and `data-inview` is the latch, both written by
+   `@/components/motion/reveal`. `--i` staggers siblings, `--reveal-delay`
+   offsets a whole group, and `--reveal-step` retunes the stagger. */
+
+/* Opacity and a 16px rise, and nothing else.
+ *
+ * There used to be a `filter: blur(6px)` on the hidden half as well. A blur is
+ * a per frame convolution over the element's whole painted box, so fifty of
+ * them arriving on one page meant fifty simultaneous blur passes on the first
+ * screens of a scroll; it was the single most expensive thing on the site and
+ * it read as a fade anyway.
+ *
+ * `will-change` is not written here either. It is set inline by
+ * `@/components/motion/reveal` on the element that is about to move and
+ * removed the moment the transition ends, so a page of pending reveals costs
+ * nothing at first paint. */
+html.motion-ready [data-reveal] {
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out);
+  transition-delay: calc(
+    var(--i, 0) * var(--reveal-step, 60ms) + var(--reveal-delay, 0ms)
+  );
+}
+html.motion-ready [data-reveal]:not([data-inview]) {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+/* ---------- Scroll-lit text ----------
+   A block of copy starts dim and lights word by word as it travels up the
+   viewport: the lead sentence reaches white first, then the continuation
+   follows it to the muted tone.
+
+   The whole effect is one custom property per block. `--p` is written on the
+   block by `@/components/motion/scroll-light-boot` from a single passive
+   scroll listener, and every word carries `--i` against the block's `--n`, so
+   the colour of each word is resolved here rather than in JavaScript. A thirty
+   word paragraph therefore costs one style write per frame, not thirty.
+
+   `--p` defaults to 1, which is what makes this safe: no JavaScript, the
+   moment before hydration, and reduced motion all leave every word fully lit,
+   and the dim half is only ever written under `html.motion-ready`. The words
+   are plain inline spans with the original whitespace left between them, so
+   the text breaks, copies and is announced exactly as it was. */
+
+[data-scroll-light] {
+  --p: 1;
+}
+.sl-w {
+  color: inherit;
+}
+html.motion-ready .sl-w {
+  /* How far this particular word has been reached: the block's progress spread
+     across its word count, clamped to this word's own slot. */
+  --t: clamp(0, calc(var(--p) * var(--n, 1) - var(--i, 0)), 1);
+  color: color-mix(
+    in srgb,
+    var(--sl-lit, #ffffff) calc(var(--t) * 100%),
+    var(--sl-dim, rgba(255, 255, 255, 0.22))
+  );
+  transition: color 120ms var(--ease);
+}
+/* The continuation of a two-tone line lights to the muted tone, not to white,
+   so the emphasis the copy was written with survives the animation. */
+html.motion-ready .sl-soft {
+  --sl-lit: rgba(255, 255, 255, 0.62);
+}
+
+/* Anchors glide rather than jump. Reduced motion falls back to the browser
+   default, and base.css forces `scroll-behavior: auto` there as well. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ---------- Route changes ----------
+   Fade and an 8px rise. The fill is `backwards` on purpose: once the entrance
+   has played the wrapper carries no transform at all, so a `position: sticky`
+   or `position: fixed` descendant is never trapped in a stale containing
+   block. */
+
+.page-enter {
+  animation: page-in 420ms var(--ease-out) backwards;
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Sliding indicator ----------
+   One pill per container, moved by `useSlidingIndicator`. It starts untransitioned
+   so the first measurement lands silently, and animates from then on. */
+
+.indicator-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: var(--r-control);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: var(--highlight);
+}
+.indicator-pill[data-placed] {
+  transition:
+    transform var(--medium) var(--ease-out),
+    width var(--medium) var(--ease-out),
+    height var(--medium) var(--ease-out),
+    opacity var(--fast) var(--ease);
+}
+/* A hairline variant for indexes and sidebars, where a pill would be too loud.
+   The element still takes the whole item's box so it can be measured the same
+   way; only the rule it draws is a hairline. */
+.indicator-line {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.indicator-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--text);
+}
+
+/* ---------- Rows ----------
+   A wash slides in from the left, the leading number lights up, the label
+   steps aside and the trailing arrow moves. Compose it with `.ix-bob` when the
+   arrow should keep moving while the row is held. */
+
+.ix-row {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 44px;
+  padding: 12px 16px;
+  border-radius: var(--r-control);
+  color: var(--text-2);
+}
+.ix-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.025) 58%,
+    transparent
+  );
+  opacity: 0;
+  transform: translateX(-10px);
+  transition:
+    opacity var(--medium) var(--ease),
+    transform var(--medium) var(--ease-out);
+}
+.ix-row:hover,
+.ix-row:focus-visible {
+  color: var(--text);
+}
+.ix-row:hover::before,
+.ix-row:focus-visible::before {
+  opacity: 1;
+  transform: none;
+}
+
+.ix-row-n {
+  font-family: var(--font-num);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  transition:
+    color var(--fast) var(--ease),
+    text-shadow var(--medium) var(--ease);
+}
+.ix-row:hover .ix-row-n,
+.ix-row:focus-visible .ix-row-n {
+  color: var(--text);
+  text-shadow: 0 0 14px rgba(205, 218, 255, 0.4);
+}
+
+.ix-row-label {
+  min-width: 0;
+  transition: transform var(--medium) var(--ease-out);
+}
+.ix-row:hover .ix-row-label,
+.ix-row:focus-visible .ix-row-label {
+  transform: translateX(4px);
+}
+
+.ix-row-arrow {
+  margin-left: auto;
+  color: var(--text-3);
+  transition:
+    color var(--fast) var(--ease),
+    transform var(--medium) var(--ease-out);
+}
+.ix-row:hover .ix-row-arrow,
+.ix-row:focus-visible .ix-row-arrow {
+  color: var(--text);
+}
+
+/* ---------- Section index ----------
+   The table of contents at the head of a long section. Owned by
+   `@/components/home/section-index`; the rows are plain `.ix-row`s, so this
+   block only has to lay them out. */
+
+.sx {
+  display: block;
+  padding-top: clamp(24px, 3vw, 44px);
+}
+.sx-list {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+}
+.sx-row {
+  min-height: 56px;
+  padding: 14px 16px;
+}
+.sx-row .ix-row-label {
+  font-size: 15px;
+  font-weight: 500;
+}
+@media (max-width: 600px) {
+  .sx-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Cards ---------- */
+
+.ix-card {
+  transition:
+    transform var(--medium) var(--ease-out),
+    border-color var(--medium) var(--ease),
+    box-shadow var(--medium) var(--ease);
+}
+.ix-card:hover,
+.ix-card:focus-within {
+  transform: translateY(-2px);
+  border-color: var(--stroke-strong);
+  box-shadow:
+    var(--highlight),
+    0 18px 48px -24px rgba(0, 0, 0, 0.9);
+}
+
+/* ---------- Links ----------
+   An underline drawn in from the left. `.text-link` gets the same treatment in
+   base.css, so ordinary text links need no extra class. */
+
+.ix-link {
+  position: relative;
+}
+.ix-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--medium) var(--ease-out);
+}
+.ix-link:hover::after,
+.ix-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* ---------- Sheen ----------
+   Removed. A band of light used to sweep across `.button-primary` and anything
+   carrying `.ix-sheen` on hover or focus. It read as a flash on the one control
+   the reader is about to press, so it is gone site-wide and there is no class
+   to reach for. A button answers the pointer with its background, the 3px
+   arrow nudge and the 1px press, and with nothing else. */
+
+/* ---------- Arrows ----------
+   A 3px bob, looping only while the thing that owns the arrow is held. Keep
+   `.ix-bob` a direct child of the hoverable element, or put it inside an
+   `.ix-row`, which is matched explicitly. */
+
+:hover > .ix-bob,
+:focus-visible > .ix-bob,
+.ix-row:hover .ix-bob,
+.ix-row:focus-visible .ix-bob {
+  animation: bob 1200ms var(--ease) infinite;
+}
+
+/* ---------- Figures ----------
+   `.ix-grow-x` / `.ix-grow-y` grow out of nothing once their `[data-reveal]`
+   ancestor is in view; `--i` sequences the segments of a bar.
+   `.ix-draw-line` draws a stroke, and needs `pathLength="1"` on the path so the
+   dash maths is resolution independent. */
+
+.ix-grow-x,
+.ix-grow-y {
+  transform: scale(1);
+}
+.ix-grow-x {
+  transform-origin: 0 50%;
+}
+.ix-grow-y {
+  transform-origin: 50% 100%;
+}
+html.motion-ready .ix-grow-x,
+html.motion-ready .ix-grow-y {
+  transition: transform 760ms var(--ease-out);
+  transition-delay: calc(
+    var(--i, 0) * var(--grow-step, 90ms) + var(--reveal-delay, 0ms)
+  );
+}
+html.motion-ready [data-reveal]:not([data-inview]) .ix-grow-x {
+  transform: scaleX(0);
+}
+html.motion-ready [data-reveal]:not([data-inview]) .ix-grow-y {
+  transform: scaleY(0);
+}
+
+.ix-draw-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+html.motion-ready [data-reveal]:not([data-inview]) .ix-draw-line {
+  stroke-dashoffset: 1;
+}
+html.motion-ready .ix-draw-line {
+  transition: stroke-dashoffset 1100ms var(--ease-out);
+  transition-delay: calc(
+    var(--i, 0) * var(--grow-step, 90ms) + var(--reveal-delay, 0ms)
+  );
+}
+
+/* Engraving turns slowly enough that you notice it only on second look. */
+html.motion-ready .ix-drift {
+  animation: drift 120s linear infinite;
+}
+
+/* ---------- Fields ---------- */
+
+.ix-field {
+  transition:
+    border-color var(--fast) var(--ease),
+    box-shadow var(--medium) var(--ease-out);
+}
+.ix-field:focus-within,
+.amount-input:focus-within {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+}
+.amount-input {
+  transition:
+    border-color var(--fast) var(--ease),
+    box-shadow var(--medium) var(--ease-out);
+}
+
+/* ---------- Disclosure ----------
+   The chevron always turns. The height only animates where the browser can
+   interpolate to `auto`, which is what `interpolate-size` unlocks. */
+
+.ix-chevron {
+  transition: transform var(--medium) var(--ease-out);
+}
+details[open] > summary .ix-chevron {
+  transform: rotate(180deg);
+}
+
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+}
+@supports selector(::details-content) {
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size var(--medium) var(--ease-out),
+      content-visibility var(--medium) var(--ease-out) allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+  }
+}
+
+/* ---------- Dialog ----------
+   In and out, with no change to `deposit-preview.tsx`. `allow-discrete` keeps
+   `display` and the top layer alive for the length of the exit. */
+
+.deposit-dialog {
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+  transition:
+    opacity 240ms var(--ease),
+    transform 240ms var(--ease-out),
+    overlay 240ms allow-discrete,
+    display 240ms allow-discrete;
+}
+.deposit-dialog[open] {
+  opacity: 1;
+  transform: none;
+}
+@starting-style {
+  .deposit-dialog[open] {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+.deposit-dialog::backdrop {
+  opacity: 0;
+  transition:
+    opacity 240ms var(--ease),
+    overlay 240ms allow-discrete,
+    display 240ms allow-discrete;
+}
+.deposit-dialog[open]::backdrop {
+  opacity: 1;
+}
+@starting-style {
+  .deposit-dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+@keyframes drift {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Reduced motion is handled once, in base.css: every animation and transition
+   is cancelled and `[data-reveal]` is forced visible. The `html.motion-ready`
+   guard above means the hidden state is never written in the first place. */

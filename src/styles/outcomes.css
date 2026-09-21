@@ -1,0 +1,480 @@
+/* Outcomes, underwriting flow and the closing slab.
+   Owner: outcomes agent. Class prefixes: out-, flow-, close-
+   Loss is drawn hollow (outline/dashed/wireframe), gain filled.
+
+   Two rules run through this file.
+
+   1. Outcome is carried by fill and luminance, never by hue. A win is a solid
+      platinum figure on filled glass; a loss is the same figure cut out of the
+      page, inside a dashed frame. There is no green and no red, because a
+      colour would read as a verdict on a scenario that is explicitly not a
+      prediction.
+   2. Nothing touches its container. Every bordered or filled block here carries
+      at least 20px of inner padding.
+
+   Never hand-write a -webkit- prefix: lightningcss adds them, and silently
+   drops the standard property when both are present. The one exception is
+   -webkit-text-stroke, which has no standard counterpart to be dropped. */
+
+/* Both heads are plain `SectionHead`s: lead in the h2, continuation as the
+   20px two-tone line under it, measured and centred in surfaces.css. */
+
+/* A text link is a 33px target at its natural leading, which is under the
+   floor for a thumb. These two are the only ones in this file. */
+.out-note .text-link,
+.flow-foot .text-link {
+  min-height: 44px;
+}
+
+/* ---------- Outcomes ---------- */
+
+.out {
+  position: relative;
+}
+
+.out-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: clamp(36px, 4.4vw, 60px);
+}
+
+/* The label sits on the top edge and the figure block sits on the bottom one:
+   `margin-top: auto` on `.out-cap` is the single spacer, so the card is read
+   from its title down to its last sentence with the air in the middle rather
+   than trailing off the end. The floors dropped by the 31px the deleted ruler
+   used to occupy, so the cards keep the density they had rather than becoming
+   emptier for having lost their ornament. */
+.out-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 212px;
+  padding: clamp(20px, 2.1vw, 28px);
+  overflow: hidden;
+}
+.out-card-wide {
+  grid-column: span 7;
+}
+.out-card-narrow {
+  grid-column: span 5;
+}
+.out-card-tall {
+  min-height: clamp(256px, 22vw, 332px);
+}
+
+/* There is deliberately no ornament on these cards: no engraved seal and no
+   ruler. A rosette is a 1000-unit drawing whose hairlines collapse into a grey
+   mass at card scale, and the ruler under each figure has been cut on the
+   owner's direction. Engine-turned rosettes stay where they have the room to
+   read: the hero. */
+
+.out-label {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--text);
+}
+.out-cap {
+  margin-top: auto;
+  padding-top: 18px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+
+.out-figure {
+  font-family: var(--font-num);
+  font-size: clamp(30px, 3.6vw, 48px);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.out-card-tall .out-figure {
+  font-size: clamp(34px, 4.4vw, 60px);
+}
+
+/* A loss is not a number in another colour. It is the same number, not filled
+   in. The solid muted colour is the floor for engines without text-stroke. */
+.out-figure-hollow {
+  color: var(--text-3);
+}
+@supports (-webkit-text-stroke: 1px #fff) {
+  .out-figure-hollow {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.55);
+  }
+}
+
+.out-meta {
+  margin-top: 12px;
+}
+.out-when {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-chip);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.out-card-hollow .out-when {
+  background: none;
+  border-style: dashed;
+  box-shadow: none;
+  color: var(--text-3);
+}
+
+.out-effect {
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-4);
+}
+
+/* There is no ruler under the figure any more. It drew a hairline as long as
+   the scenario's share of a five year horizon and finished in a marker, solid
+   on the gains and dashed with a hollow dot on the loss. It said nothing the
+   `month N` chip above it had not already said, and because it was the last
+   thing in the card it left a band of empty space along the bottom of all four.
+   Do not put it back: the card ends on its own sentence. */
+
+/* The hollow card keeps the stroke and loses everything else. */
+.out-card-hollow {
+  background: none;
+  border-style: dashed;
+  border-color: var(--stroke-strong);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.out-card-hollow:hover,
+.out-card-hollow:focus-within {
+  border-color: var(--stroke-bright);
+  box-shadow: none;
+}
+
+.out-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 54ch;
+  margin-inline: auto;
+  margin-top: clamp(28px, 3vw, 44px);
+  padding-inline: 16px;
+  text-align: center;
+}
+
+@media (max-width: 1000px) {
+  .out-card-wide,
+  .out-card-narrow {
+    grid-column: span 6;
+  }
+}
+@media (max-width: 800px) {
+  .out-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .out-card-wide,
+  .out-card-narrow {
+    grid-column: 1 / -1;
+  }
+  .out-card,
+  .out-card-tall {
+    min-height: 0;
+  }
+}
+
+/* ---------- Underwriting flow ----------
+   A sequence the reader drives, not a row of cards. The four checks are a
+   segmented control on a progress rail, and the panel under them is what the
+   selected check asks. Everything here is at least 44px tall and everything
+   bordered carries at least 16px of inner padding. */
+
+.flow {
+  position: relative;
+}
+
+.flow-rail {
+  position: relative;
+  margin-top: clamp(36px, 4.4vw, 60px);
+}
+
+/* The control. `position: relative` and one `[data-indicator]` child are what
+   the sliding pill needs; the buttons sit above it. */
+.flow-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--highlight);
+}
+.flow-pill {
+  border-radius: var(--r-control);
+}
+
+.flow-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--text-2);
+  text-align: left;
+  transition:
+    color var(--fast) var(--ease),
+    transform var(--medium) var(--ease-out);
+}
+.flow-step:hover {
+  color: var(--text);
+}
+.flow-step:active {
+  transform: translateY(1px);
+}
+.flow-step[aria-selected="true"] {
+  color: var(--text);
+}
+
+.flow-step-n {
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  transition:
+    color var(--fast) var(--ease),
+    text-shadow var(--medium) var(--ease);
+}
+.flow-step:hover .flow-step-n,
+.flow-step[aria-selected="true"] .flow-step-n {
+  color: var(--text);
+  text-shadow: 0 0 14px rgba(205, 218, 255, 0.4);
+}
+.flow-step-label {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+/* The wire. It fills to the check being read, so the order is drawn rather
+   than implied. */
+.flow-progress {
+  position: relative;
+  height: 1px;
+  margin: 18px 2px 0;
+  background: var(--stroke);
+  overflow: hidden;
+}
+.flow-progress-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1),
+    var(--stroke-bright)
+  );
+  transform: scaleX(var(--p, 0.25));
+  transform-origin: 0 50%;
+  transition: transform 420ms var(--ease-out);
+}
+
+/* ---------- The panel ---------- */
+
+.flow-panel {
+  display: block;
+  margin-top: 18px;
+  padding: clamp(20px, 2.6vw, 30px);
+}
+.flow-panel-swap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: start;
+}
+html.motion-ready .flow-panel-swap {
+  animation: flow-in 240ms var(--ease-out) both;
+}
+@keyframes flow-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.flow-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--r-control);
+  background: var(--surface-hover);
+  box-shadow: var(--highlight);
+  color: var(--text);
+}
+.flow-glyph {
+  width: 22px;
+  height: 22px;
+}
+.flow-title {
+  margin-top: 20px;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.flow-text {
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.flow-checks {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.flow-checks > div {
+  padding: 16px 18px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-card);
+  background: rgba(255, 255, 255, 0.02);
+}
+.flow-checks dt {
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  color: var(--text-3);
+}
+.flow-checks dd {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.flow-foot {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(28px, 3vw, 44px);
+}
+
+@media (max-width: 900px) {
+  .flow-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .flow-panel-swap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .flow-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .flow-step {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
+    min-height: 56px;
+  }
+  .flow-step-label {
+    font-size: 15px;
+  }
+}
+
+/* ---------- Closing ---------- */
+
+/* The slab used to run to 132px of padding above and below a 760px plate, so
+   the finale was mostly two empty bands with a card floating between them. The
+   plate is wider and the bands are gone; the light cone still gives it air. */
+.close {
+  padding-block: clamp(44px, 5vw, 76px);
+  margin-bottom: clamp(48px, 6vw, 96px);
+  background: var(--bg-raise);
+}
+.close-inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* A certificate, drawn rather than engraved: the panel and a second hairline
+   10px inside it. There are no corner marks on it, no guilloche and no seal
+   under the copy, so every line of text sits on the plate and nothing else. It
+   does not move with the pointer either. */
+.close-cert {
+  position: relative;
+  max-width: 980px;
+  margin-inline: auto;
+  padding: clamp(32px, 3.6vw, 52px) clamp(26px, 4vw, 64px);
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow:
+    var(--highlight),
+    0 40px 120px -20px var(--glow);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* The inner rule of the double frame: one hairline, 10px in from the panel's
+   own stroke, square-ish so the two read as a pair rather than as a panel with
+   a rounded ghost inside it. */
+.close-rule {
+  position: absolute;
+  inset: 10px;
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+}
+
+.close-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.close-copy {
+  max-width: 46ch;
+}
+.close-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .close-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .close-actions .button {
+    width: 100%;
+  }
+  .close-rule {
+    inset: 8px;
+  }
+}
